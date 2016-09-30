@@ -4,10 +4,14 @@
 }
 
 .puzzle-square {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border: 1px solid #333;
   display: inline-block;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  padding: 8px;
 }
 
 .puzzle-square.filled {
@@ -15,7 +19,30 @@
 }
 
 .puzzle-number {
-  font-size: 10
+  font-size: 10px;
+  position: absolute;
+  top: 0px;
+  left: 2px;
 }
 
+.puzzle-value {
+  font-size: 18px;
+  font-weight: bold;
+}
 
+.clue-number {
+  min-width: 24px;
+  display: inline-block;
+}
+
+.clue input {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  margin-right: 4px;
+}
+
+.clue {
+  margin-bottom: 10px;
+}
