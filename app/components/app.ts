@@ -29,7 +29,7 @@ const START_GRID = [
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
                 <input *ngIf="!cell.filled"
                       class="puzzle-value text-uppercase"
-                      (keyup)="onKeyUp($event)"
+                      (keyup)="onGridKeyUp($event)"
                       [(ngModel)]="cell.value" (change)="validateCell(cell)">
               </div>
             </div>
@@ -65,14 +65,20 @@ export class AppComponent {
   }
 
   onKeyUp(event) {
-    if (event.key === 'Backspace') this.reverseInput();
-    else if (event.key.match(/[\w]/) && event.key.length === 1) this.advanceInput();
+    if (event.key === 'Backspace') $(':focus').prev().focus();
+    else if (event.key.match(/[\w]/) && event.key.length === 1) $(':focus').next().focus();
   }
-  advanceInput() {
-    $(':focus').next().focus();
-  }
-  reverseInput() {
-    $(':focus').prev().focus();
+
+  onGridKeyUp(event) {
+    var focused = $(':focus');
+    var cell = focused.parent();
+    var row = cell.parent();
+    var colIdx = row.children().index(cell.get(0));
+    console.log('col', colIdx);
+    if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
+    else if (event.key.match(/[\w]/) && event.key.length === 1 || event.key === 'ArrowRight') cell.next().find('input').focus();
+    else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
+    else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
   }
 
   validateCell(cell) {
