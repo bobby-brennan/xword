@@ -27,7 +27,10 @@ const START_GRID = [
               <div class="puzzle-square" *ngFor="let cell of row"
                     (click)="cell.filled = !cell.filled; numberGrid()" [class.filled]="cell.filled">
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
-                <span class="puzzle-value text-uppercase">{{cell.value}}</span>
+                <input *ngIf="!cell.filled"
+                      class="puzzle-value text-uppercase"
+                      (keyup)="onKeyUp($event)"
+                      [(ngModel)]="cell.value" (change)="validateCell(cell)">
               </div>
             </div>
           </div>
@@ -39,7 +42,7 @@ const START_GRID = [
                   <span class="clue-number">{{clue.number}}.</span>
                   <input type="text" size="1" [(ngModel)]="cell.value" class="text-uppercase"
                        *ngFor="let cell of clue.cells"
-                       (change)="cell.value = cell.value ? cell.value.charAt(cell.value.length - 1) : ''"
+                       (change)="validateCell(cell)"
                         (keyup)="onKeyUp($event)">
                 </div>
               </div>
@@ -62,7 +65,6 @@ export class AppComponent {
   }
 
   onKeyUp(event) {
-    console.log(event);
     if (event.key === 'Backspace') this.reverseInput();
     else if (event.key.match(/[\w]/) && event.key.length === 1) this.advanceInput();
   }
@@ -71,6 +73,14 @@ export class AppComponent {
   }
   reverseInput() {
     $(':focus').prev().focus();
+  }
+
+  validateCell(cell) {
+    if (!cell.value) return;
+    var c = cell.value.length - 1;
+    while (c >= 0 && !cell.value.charAt(c).match(/\w/)) --c
+    if (c < 0) cell.value = '';
+    else cell.value = cell.value.charAt(c);
   }
 
   getCells(direction, start, length) {

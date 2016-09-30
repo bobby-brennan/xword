@@ -10,8 +10,6 @@
   display: inline-block;
   overflow: hidden;
   position: relative;
-  text-align: center;
-  padding: 8px;
 }
 
 .puzzle-square.filled {
@@ -25,9 +23,11 @@
   left: 2px;
 }
 
-.puzzle-value {
-  font-size: 18px;
+input.puzzle-value {
+  height: 100%;
+  width: 100%;
   font-weight: bold;
+  text-align: center;
 }
 
 .clue-number {
