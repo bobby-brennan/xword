@@ -10,5 +10,4 @@ import 'reflect-metadata';
 // Libraries
 import 'jquery';
 import 'bootstrap/dist/js/bootstrap.js';
-import 'marked';
 

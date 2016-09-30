@@ -13,7 +13,7 @@ import { AppComponent }       from './components/app';
     HttpModule,
     FormsModule,
     BrowserModule,
-    RouterModule.forRoot(appRoutes),
+    //RouterModule.forRoot(appRoutes),
   ],
   providers: [
     {provide: APP_BASE_HREF, useValue: '/'}
