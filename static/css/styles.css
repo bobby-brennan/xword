@@ -1,0 +1,21 @@
+.puzzle {
+  margin-top: 100px;
+  width: 1000px;
+}
+
+.puzzle-square {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #333;
+  display: inline-block;
+}
+
+.puzzle-square.filled {
+  background-color: #333;
+}
+
+.puzzle-number {
+  font-size: 10
+}
+
+
