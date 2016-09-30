@@ -36,12 +36,21 @@ input.puzzle-value {
   display: inline-block;
 }
 
-.clue input {
+.clue input.clue-letter {
   width: 20px;
   height: 20px;
   border: none;
   border-bottom: 2px solid #ccc;
   margin-right: 4px;
+  text-align: center;
+}
+
+.clue input.clue-prompt {
+  border: none;
+  border-bottom: 1px solid #ccc;
+  height: 20px;
+  margin-top: 6px;
+  padding: 0px;
 }
 
 .clue {

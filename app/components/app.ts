@@ -38,13 +38,12 @@ const START_GRID = [
             <div *ngFor="let clueSet of [acrossClues, downClues]" class="col-xs-12 col-md-6">
               <h4>{{ clueSet === acrossClues ? 'Across' : 'Down' }}</h4>
               <div *ngFor="let clue of clueSet" class="clue">
-                <div class="input-group">
-                  <span class="clue-number">{{clue.number}}.</span>
-                  <input type="text" size="1" [(ngModel)]="cell.value" class="text-uppercase"
-                       *ngFor="let cell of clue.cells"
-                       (change)="validateCell(cell)"
-                        (keyup)="onKeyUp($event)">
-                </div>
+                <span class="clue-number">{{clue.number}}.</span>
+                <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
+                     *ngFor="let cell of clue.cells"
+                     (change)="validateCell(cell)"
+                      (keyup)="onKeyUp($event)">
+                <input type="text" class="form-control input-sm clue-prompt" [(ngModel)]="clue.prompt">
               </div>
             </div>
           </div>
