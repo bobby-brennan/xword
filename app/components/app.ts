@@ -104,6 +104,7 @@ export class AppComponent {
     this.grid.forEach((row, i) => {
       row.forEach((cell, j) => {
         if (cell.filled) return;
+        delete cell.number;
         var above = i === 0 ? true : this.grid[i-1][j].filled;
         var below = i === this.grid.length - 1 ? true : this.grid[i+1][j].filled;
         var left  = j === 0 ? true : this.grid[i][j-1].filled;
