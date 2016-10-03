@@ -173,14 +173,16 @@ export class AppComponent {
   }
 
   autocompleteAll() {
-    setTimeout(() => {
+    this.autocompleteSteps = [];
+    var nextStep = () => {
       var completed = this.autocompleteStep();
-      if (completed) this.autocompleteAll();
-    }, 1)
+      if (completed) setTimeout(() => nextStep(), 1)
+      else console.log("Stuck")
+    }
+    nextStep();
   }
 
   autocompleteStep() {
-    this.autocompleteSteps = this.autocompleteSteps || [];
     var nextClue = this.getMostConstrainedClue();
     if (!nextClue) return;
     var blanks = nextClue.cells.filter(c => !c.value);
