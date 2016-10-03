@@ -39,10 +39,11 @@ const START_GRID = [
             <div *ngFor="let clueSet of [acrossClues, downClues]" class="col-xs-12 col-md-6">
               <h4>{{ clueSet === acrossClues ? 'Across' : 'Down' }}</h4>
               <div *ngFor="let clue of clueSet" class="clue">
+                <a (click)="autocomplete(clue)" class="btn btn-sm {{clue.impossible ? 'btn-danger' : 'btn-primary'}}"><span class="fa fa-magic"></span></a>
                 <span class="clue-number">{{clue.number}}.</span>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
                      *ngFor="let cell of clue.cells"
-                     (change)="validateCell(cell)"
+                     (change)="clue.impossible = false; validateCell(cell)"
                       (keyup)="onKeyUp($event)">
                 <input type="text" class="form-control input-sm clue-prompt" [(ngModel)]="clue.prompt">
               </div>
@@ -62,6 +63,7 @@ export class AppComponent {
   constructor(private dictionary: DictionaryService) {
     window.app = this;
     this.numberGrid();
+    this.dictionary.getData().then(d => console.log('data ready'))
   }
 
   onKeyUp(event) {
@@ -136,4 +138,22 @@ export class AppComponent {
     })
   }
 
+  autocomplete(clue) {
+    clue.impossible = false;
+    var cands = this.dictionary.byLength[clue.length - 1];
+    var startIdx = Math.floor(Math.random() * cands.length);
+    for (var i = 0; i < cands.length; ++i) {
+      var cand = cands[(i + startIdx) % cands.length];
+      var match = true;
+      for (var j = 0; match && j < clue.cells.length; ++j) {
+        var l = clue.cells[j].value;
+        if (l && cand.word.charAt(j) !== l) match = false;
+      }
+      if (match) {
+        clue.cells.forEach((c, idx) => c.value = cand.word.charAt(idx))
+        return;
+      }
+    }
+    clue.impossible = true;
+  }
 }
