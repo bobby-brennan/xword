@@ -29,10 +29,18 @@ const START_GRID = [
                     (click)="cell.filled = !cell.filled; numberGrid()" [class.filled]="cell.filled">
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
                 <input *ngIf="!cell.filled"
-                      class="puzzle-value text-uppercase"
+                      class="puzzle-value text-uppercase {{cell.autocompleted ? 'autocompleted' : ''}}"
                       (keyup)="onGridKeyUp($event)"
                       [(ngModel)]="cell.value" (change)="validateCell(cell)">
               </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12">
+              <a class="btn btn-primary" (click)="autocompleteAll()">
+                <span class="fa fa-magic"></span> &nbsp;
+                Auto-complete Puzzle
+              </a>
             </div>
           </div>
           <div class="clues row">
@@ -43,7 +51,7 @@ const START_GRID = [
                 <span class="clue-number">{{clue.number}}.</span>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
                      *ngFor="let cell of clue.cells"
-                     (change)="clue.impossible = false; validateCell(cell)"
+                     (change)="clue.impossible = false; cell.autocompleted = false; validateCell(cell)"
                       (keyup)="onKeyUp($event)">
                 <input type="text" class="form-control input-sm clue-prompt" [(ngModel)]="clue.prompt">
               </div>
@@ -59,6 +67,7 @@ export class AppComponent {
   }));
   acrossClues: any[]=[];
   downClues: any[]=[];
+  autocompleteSteps: any[];
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
@@ -76,7 +85,6 @@ export class AppComponent {
     var cell = focused.parent();
     var row = cell.parent();
     var colIdx = row.children().index(cell.get(0));
-    console.log('col', colIdx);
     if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
     else if (event.key.match(/[\w]/) && event.key.length === 1 || event.key === 'ArrowRight') cell.next().find('input').focus();
     else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
@@ -138,22 +146,85 @@ export class AppComponent {
     })
   }
 
-  autocomplete(clue) {
+  getMostConstrainedClue() {
+    var maxClue = null;
+    var maxConstraint = -1.0;
+    this.acrossClues.concat(this.downClues).forEach(clue => {
+      var constraint = clue.cells.filter(c => c.value).length / clue.length;
+      if (constraint < 1.0 && constraint > maxConstraint) {
+        maxClue = clue;
+        maxConstraint = constraint;
+      }
+    })
+    return maxClue;
+  }
+
+  autocompleteAll() {
+    setTimeout(() => {
+      var completed = this.autocompleteStep();
+      if (completed) this.autocompleteAll();
+    }, 10)
+  }
+
+  autocompleteStep() {
+    this.autocompleteSteps = this.autocompleteSteps || [];
+    var nextClue = this.getMostConstrainedClue();
+    if (!nextClue) return;
+    var blanks = nextClue.cells.filter(c => !c.value);
+    var completion = this.autocomplete(nextClue);
+    if (completion) {
+      var firstAttempt = nextClue.cells.map(c => c.value).join('');
+      var lastAttempt = firstAttempt;
+      this.autocompleteSteps.push({
+        firstAttempt,
+        lastAttempt,
+        blanks,
+        clue: nextClue,
+      });
+    } else {
+      this.unwindAutocompletion();
+    }
+    return true;
+  }
+
+  unwindAutocompletion() {
+    var lastStep = this.autocompleteSteps.pop();
+    lastStep.blanks.forEach(c => c.value = '');
+    var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
+    if (completion) {
+      lastStep.lastAttempt = completion;
+      this.autocompleteSteps.push(lastStep);
+    } else {
+      this.unwindAutocompletion();
+    }
+  }
+
+  autocomplete(clue, startVal='', endVal='') {
     clue.impossible = false;
     var cands = this.dictionary.byLength[clue.length - 1];
     var startIdx = Math.floor(Math.random() * cands.length);
+    if (startVal) {
+      cands.forEach((cand, idx) => {
+        if (cand.word === startVal) startIdx = idx + 1;
+      })
+    }
     for (var i = 0; i < cands.length; ++i) {
       var cand = cands[(i + startIdx) % cands.length];
+      if (endVal && endVal === cand.word) return;
       var match = true;
       for (var j = 0; match && j < clue.cells.length; ++j) {
         var l = clue.cells[j].value;
         if (l && cand.word.charAt(j) !== l) match = false;
       }
       if (match) {
-        clue.cells.forEach((c, idx) => c.value = cand.word.charAt(idx))
-        return;
+        clue.cells.forEach((c, idx) => {
+          c.value = cand.word.charAt(idx);
+          c.autocompleted = true;
+        })
+        return cand.word;
       }
     }
     clue.impossible = true;
+    return false;
   }
 }

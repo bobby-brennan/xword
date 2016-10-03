@@ -31,6 +31,10 @@ input.puzzle-value {
   cursor: pointer;
 }
 
+input.puzzle-value.autocompleted {
+  color: blue;
+}
+
 .clue-number {
   min-width: 24px;
   display: inline-block;
