@@ -299,6 +299,7 @@ export class AppComponent {
     var lastStep = this.autocompleteSteps.pop();
     if (!lastStep) return;
     lastStep.blanks.forEach(c => c.value = '');
+    lastStep.clue.prompt = '';
     if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
       return this.unwindAutocompletion();
     }
@@ -362,6 +363,7 @@ export class AppComponent {
         if (!c.value) c.autocompleted = true;
         c.value = completion.charAt(idx);
       })
+      clue.prompt = this.dictionary.clues[completion.toUpperCase()] || '';
     }
     return completion;
   }

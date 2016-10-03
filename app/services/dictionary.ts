@@ -7,12 +7,13 @@ import 'rxjs/add/operator/toPromise';
 
 declare let window: any;
 
-const DICT_URL = 'dictionary.json';
+const DICT_URL = 'clues_filtered.json';
 const MAX_WORD_LENGTH = 20
 const MIN_BIGRAM_COUNT = 50;
 
 @Injectable()
 export class DictionaryService {
+  clues: any;
   words: any[];
   byLength: any[][];
   bigrams: any;
@@ -28,9 +29,10 @@ export class DictionaryService {
     return this.http.get(DICT_URL)
       .toPromise()
       .then(data => {
-        this.words = data.json()
+        this.clues = data.json();
+        this.words = Object.keys(this.clues)
             .filter(s => s.length <= MAX_WORD_LENGTH)
-            .map((s, idx) => ({word: s, frequency: idx}));
+            .map((s, idx) => ({word: s.toLowerCase(), frequency: idx}));
         this.bigrams = {};
         this.words.forEach(w => {
           var arr = this.byLength[w.word.length - 1];
