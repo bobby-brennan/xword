@@ -31,10 +31,18 @@ const START_GRID = [
           </div>
           <div class="row">
             <div class="col-xs-4">
-              <a class="btn btn-primary" (click)="autocompleteAll()">
-                <span class="fa fa-magic"></span> &nbsp;
-                Auto-complete Puzzle
-              </a>
+              <label><i class="fa fa-magic"></i>  Autocomplete</label>
+              <div class="btn-group">
+                <button class="btn btn-primary" (click)="autocompleteAll()" [disabled]="autocompleting">
+                  <span class="fa fa-play"></span>
+                </button>
+                <button class="btn btn-primary" (click)="pauseAutocomplete()" [disabled]="!autocompleting">
+                  <span class="fa fa-pause"></span>
+                </button>
+                <button class="btn btn-primary" (click)="autocompleteStep()" [disabled]="autocompleting">
+                  <span class="fa fa-step-forward"></span>
+                </button>
+              </div>
             </div>
             <div class="col-xs-4">
               <label>Size</label>
@@ -66,7 +74,9 @@ export class AppComponent {
   gridSize: number=START_GRID.length;
   acrossClues: any[]=[];
   downClues: any[]=[];
-  autocompleteSteps: any[];
+  autocompleteSteps: any[]=[];
+  autocompleting: boolean=false;
+  timeout: any;
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
@@ -173,13 +183,21 @@ export class AppComponent {
   }
 
   autocompleteAll() {
-    this.autocompleteSteps = [];
+    this.autocompleting = true;
     var nextStep = () => {
       var completed = this.autocompleteStep();
-      if (completed) setTimeout(() => nextStep(), 1)
+      if (completed) {
+        this.timeout = setTimeout(() => nextStep(), 1)
+      }
       else console.log("Stuck")
     }
     nextStep();
+  }
+
+  pauseAutocomplete() {
+    clearTimeout(this.timeout);
+    this.timeout = null;
+    this.autocompleting = false;
   }
 
   autocompleteStep() {
@@ -237,7 +255,6 @@ export class AppComponent {
         if (l && cand.word.charAt(j) !== l) match = false;
       }
       if (!match) continue;
-
       var bigramsAreOK = true;
       var otherDirClues = this.downClues.indexOf(clue) === -1 ? this.downClues : this.acrossClues;
       clue.cells.forEach((cell, idx) => {
@@ -249,7 +266,7 @@ export class AppComponent {
             if (!this.dictionary.bigrams[leftBigram]) bigramsAreOK = false;
           }
           if (cellIdx < iClue.cells.length - 1 && iClue.cells[cellIdx + 1].value) {
-            var rightBigram = iClue.cells[cellIdx + 1].value + cand.word.charAt(idx);
+            var rightBigram = cand.word.charAt(idx) + iClue.cells[cellIdx + 1].value;
             if (!this.dictionary.bigrams[rightBigram]) bigramsAreOK = false;
           }
         })
