@@ -15,6 +15,7 @@ const MAX_WORD_LENGTH = 20
 export class DictionaryService {
   words: any[];
   byLength: any[][];
+  bigrams: any;
 
   constructor(private http: Http) {
     this.byLength = [];
@@ -30,9 +31,15 @@ export class DictionaryService {
         this.words = data.json()
             .filter(s => s.length <= MAX_WORD_LENGTH)
             .map((s, idx) => ({word: s, frequency: idx}));
+        this.bigrams = {};
         this.words.forEach(w => {
           var arr = this.byLength[w.word.length - 1];
           arr.push(w);
+          for (var i = 0; i < w.word.length - 1; ++i) {
+            var bigram = w.word.substring(i, i + 2);
+            this.bigrams[bigram] = this.bigrams[bigram] || 0;
+            this.bigrams[bigram]++;
+          }
         })
         return this.byLength;
       })
