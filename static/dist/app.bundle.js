@@ -42420,7 +42420,7 @@ webpackJsonp([0],[
 	__webpack_require__(32);
 	__webpack_require__(34);
 	__webpack_require__(41);
-	var DICT_URL = '/dictionary.json';
+	var DICT_URL = 'dictionary.json';
 	var MAX_WORD_LENGTH = 20;
 	var MIN_BIGRAM_COUNT = 50;
 	var DictionaryService = (function () {
