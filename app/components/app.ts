@@ -255,7 +255,7 @@ export class AppComponent {
         })
       })
       if (bigramsAreOK) {
-        clue.cells.filter(c => !c.value).forEach((c, idx) => {
+        clue.cells.forEach((c, idx) => {
           c.value = cand.word.charAt(idx);
           c.autocompleted = true;
         })
