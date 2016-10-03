@@ -7,7 +7,7 @@ import 'rxjs/add/operator/toPromise';
 
 declare let window: any;
 
-const DICT_URL = '/dictionary.json';
+const DICT_URL = 'dictionary.json';
 const MAX_WORD_LENGTH = 20
 const MIN_BIGRAM_COUNT = 50;
 
