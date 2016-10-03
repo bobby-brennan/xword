@@ -17,18 +17,6 @@ const START_GRID = [
     selector: 'xword',
     template: `
         <div class="container">
-          <div class="puzzle" *ngIf="grid">
-            <div class="puzzle-row" *ngFor="let row of grid">
-              <div class="puzzle-square" *ngFor="let cell of row"
-                    (click)="puzzleSquareClick(cell)" [class.filled]="cell.filled">
-                <span class="puzzle-number">{{cell.number}}&nbsp;</span>
-                <input *ngIf="!cell.filled"
-                      class="puzzle-value text-uppercase {{cell.autocompleted ? 'autocompleted' : ''}}"
-                      (keyup)="onGridKeyUp($event)"
-                      [(ngModel)]="cell.value" (change)="validateCell(cell)">
-              </div>
-            </div>
-          </div>
           <div class="row">
             <div class="col-xs-4">
               <label><i class="fa fa-magic"></i>  Autocomplete</label><br>
@@ -47,10 +35,10 @@ const START_GRID = [
             <div class="col-xs-4">
               <label>Size: {{gridSize}}</label><br>
               <div class="btn-group">
-                <button class="btn btn-primary fa fa-plus"
-                      [disabled]="gridSize < 5" (click)="gridSize = gridSize + 1; changeSize()"></button>
                 <button class="btn btn-primary fa fa-minus"
-                      [disabled]="gridSize > 30" (click)="gridSize = gridSize - 1; changeSize()"></button>
+                      [disabled]="gridSize <= 5" (click)="gridSize = gridSize - 1; changeSize()"></button>
+                <button class="btn btn-primary fa fa-plus"
+                      [disabled]="gridSize >= 30" (click)="gridSize = gridSize + 1; changeSize()"></button>
               </div>
             </div>
             <div class="col-xs-4">
@@ -60,6 +48,18 @@ const START_GRID = [
                       (click)="editMode = 'grid'"></button>
                 <button class="btn btn-primary fa fa-font {{editMode === 'text' ? 'active' : ''}}"
                       (click)="editMode = 'text'"></button>
+              </div>
+            </div>
+          </div>
+          <div class="puzzle" *ngIf="grid">
+            <div class="puzzle-row" *ngFor="let row of grid">
+              <div class="puzzle-square" *ngFor="let cell of row"
+                    (click)="puzzleSquareClick(cell)" [class.filled]="cell.filled">
+                <span class="puzzle-number">{{cell.number}}&nbsp;</span>
+                <input *ngIf="!cell.filled"
+                      class="puzzle-value text-uppercase {{cell.autocompleted ? 'autocompleted' : ''}}"
+                      (keyup)="onGridKeyUp($event)"
+                      [(ngModel)]="cell.value" (change)="validateCell(cell)">
               </div>
             </div>
           </div>

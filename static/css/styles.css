@@ -1,11 +1,13 @@
-xword {
+body {
+  padding-top: 100px;
 }
 
 .puzzle {
-  margin-top: 100px;
+  margin: 20px;
   width: 100%;
   overflow: scroll;
-  height: 500px
+  height: 500px;
+  white-space: nowrap;
 }
 
 .puzzle-square {
