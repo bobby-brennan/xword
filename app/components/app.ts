@@ -197,20 +197,25 @@ export class AppComponent {
         clue: nextClue,
       });
     } else {
-      this.unwindAutocompletion();
+      if (!this.unwindAutocompletion()) {
+        console.log("Can't unwind anymore");
+        return;
+      }
     }
     return true;
   }
 
   unwindAutocompletion() {
     var lastStep = this.autocompleteSteps.pop();
+    if (!lastStep) return;
     lastStep.blanks.forEach(c => c.value = '');
     var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
     if (completion) {
       lastStep.lastAttempt = completion;
       this.autocompleteSteps.push(lastStep);
+      return true;
     } else {
-      this.unwindAutocompletion();
+      return this.unwindAutocompletion();
     }
   }
 
@@ -250,7 +255,7 @@ export class AppComponent {
         })
       })
       if (bigramsAreOK) {
-        clue.cells.forEach((c, idx) => {
+        clue.cells.filter(c => !c.value).forEach((c, idx) => {
           c.value = cand.word.charAt(idx);
           c.autocompleted = true;
         })
