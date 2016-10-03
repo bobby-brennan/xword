@@ -71,7 +71,10 @@ const START_GRID = [
             <div *ngFor="let clueSet of [acrossClues, downClues]" class="col-xs-12 col-md-6">
               <h4>{{ clueSet === acrossClues ? 'Across' : 'Down' }}</h4>
               <div *ngFor="let clue of clueSet" class="clue">
-                <a (click)="autocomplete(clue)" class="btn btn-sm {{clue.impossible ? 'btn-danger' : 'btn-primary'}}"><span class="fa fa-magic"></span></a>
+                <a (click)="autocomplete(clue)"
+                      class="btn btn-sm {{!getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
+                   <span class="fa fa-magic"></span>
+                </a>
                 <span class="clue-number">{{clue.number}}.</span>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
                      *ngFor="let cell of clue.cells"
@@ -212,10 +215,15 @@ export class AppComponent {
     var maxClue = null;
     var maxConstraint = -1.0;
     this.acrossClues.concat(this.downClues).forEach(clue => {
-      var constraint = clue.cells.filter(c => c.value).length / clue.length;
-      if (constraint < 1.0 && constraint > maxConstraint) {
+      if (clue.cells.filter(c => !c.value).length && !this.getAutocompletion(clue)) {
         maxClue = clue;
-        maxConstraint = constraint;
+        maxConstraint = 1.0;
+      } else {
+        var constraint = clue.cells.filter(c => c.value).length / clue.length;
+        if (constraint < 1.0 && constraint > maxConstraint) {
+          maxClue = clue;
+          maxConstraint = constraint;
+        }
       }
     })
     return maxClue;
@@ -227,8 +235,9 @@ export class AppComponent {
       var completed = this.autocompleteStep();
       if (completed) {
         this.timeout = setTimeout(() => nextStep(), 1)
+      } else {
+        this.autocompleting = false;
       }
-      else console.log("Stuck")
     }
     nextStep();
   }
@@ -254,7 +263,7 @@ export class AppComponent {
         clue: nextClue,
       });
     } else {
-      if (!this.unwindAutocompletion()) {
+      if (!this.unwindAutocompletion(this.getIntersectingClues(nextClue))) {
         console.log("Can't unwind anymore");
         return;
       }
@@ -262,10 +271,13 @@ export class AppComponent {
     return true;
   }
 
-  unwindAutocompletion() {
+  unwindAutocompletion(targetClues=null) {
     var lastStep = this.autocompleteSteps.pop();
     if (!lastStep) return;
     lastStep.blanks.forEach(c => c.value = '');
+    if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
+      return this.unwindAutocompletion();
+    }
     var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
     if (completion) {
       lastStep.lastAttempt = completion;
@@ -276,7 +288,7 @@ export class AppComponent {
     }
   }
 
-  autocomplete(clue, startVal='', endVal='') {
+  getAutocompletion(clue, startVal='', endVal='', checkBigrams=false) {
     clue.impossible = false;
     var cands = this.dictionary.byLength[clue.length - 1];
     var startIdx = Math.floor(Math.random() * cands.length);
@@ -294,11 +306,13 @@ export class AppComponent {
         if (l && cand.word.charAt(j) !== l) match = false;
       }
       if (!match) continue;
-      var bigramsAreOK = true;
-      var otherDirClues = this.downClues.indexOf(clue) === -1 ? this.downClues : this.acrossClues;
-      clue.cells.forEach((cell, idx) => {
-        var intersections = otherDirClues.filter(crossClue => crossClue.cells.indexOf(cell) !== -1);
-        intersections.forEach(iClue => {
+
+      if (checkBigrams) {
+        var bigramsAreOK = true;
+        var dir = this.downClues.indexOf(clue) === -1 ? 'down' : 'across';
+        clue.cells.forEach((cell, idx) => {
+          var iClue = this.getCluesForCell(cell)[dir];
+          if (!iClue) return;
           var cellIdx = iClue.cells.indexOf(cell);
           if (cellIdx > 0 && iClue.cells[cellIdx - 1].value) {
             var leftBigram = iClue.cells[cellIdx - 1].value + cand.word.charAt(idx);
@@ -309,16 +323,33 @@ export class AppComponent {
             if (!this.dictionary.bigrams[rightBigram]) bigramsAreOK = false;
           }
         })
-      })
-      if (bigramsAreOK) {
-        clue.cells.forEach((c, idx) => {
-          if (!c.value) c.autocompleted = true;
-          c.value = cand.word.charAt(idx);
-        })
-        return cand.word;
+        if (!bigramsAreOK) continue;
       }
+      return cand.word;
     }
     clue.impossible = true;
     return false;
+  }
+
+  autocomplete(clue, startVal='', endVal='') {
+    var completion = this.getAutocompletion(clue, startVal, endVal, true);
+    if (completion) {
+      clue.cells.forEach((c, idx) => {
+        if (!c.value) c.autocompleted = true;
+        c.value = completion.charAt(idx);
+      })
+    }
+    return completion;
+  }
+
+  getIntersectingClues(clue) {
+    var dir = this.downClues.indexOf(clue) === -1 ? 'down' : 'across';
+    return clue.cells.map(cell => this.getCluesForCell(cell)[dir]).filter(clue => clue);
+  }
+
+  getCluesForCell(cell) {
+    var down = this.downClues.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
+    var across = this.acrossClues.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
+    return {down, across}
   }
 }
