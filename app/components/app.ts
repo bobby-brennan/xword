@@ -36,11 +36,15 @@ const START_GRID = [
             </div>
           </div>
           <div class="row">
-            <div class="col-xs-12">
+            <div class="col-xs-4">
               <a class="btn btn-primary" (click)="autocompleteAll()">
                 <span class="fa fa-magic"></span> &nbsp;
                 Auto-complete Puzzle
               </a>
+            </div>
+            <div class="col-xs-4">
+              <label>Size</label>
+              <input type="number" [(ngModel)]="gridSize" (change)="changeSize()">
             </div>
           </div>
           <div class="clues row">
@@ -65,6 +69,7 @@ export class AppComponent {
   grid: any[][]=START_GRID.map(r => r.map(c => {
     return c === 'X' ? {filled: true} : {}
   }));
+  gridSize: number=START_GRID.length;
   acrossClues: any[]=[];
   downClues: any[]=[];
   autocompleteSteps: any[];
@@ -89,6 +94,20 @@ export class AppComponent {
     else if (event.key.match(/[\w]/) && event.key.length === 1 || event.key === 'ArrowRight') cell.next().find('input').focus();
     else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
     else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
+  }
+
+  changeSize() {
+    while (this.gridSize < this.grid.length) {
+      this.grid.forEach(r => r.pop());
+      this.grid.pop();
+    }
+    while (this.gridSize > this.grid.length) {
+      var newRow = [];
+      for (var i = 0; i < this.grid.length; ++i) newRow.push({});
+      this.grid.push(newRow);
+      this.grid.forEach(r => r.push({}))
+    }
+    this.numberGrid();
   }
 
   validateCell(cell) {
