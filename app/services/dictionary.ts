@@ -9,7 +9,7 @@ declare let window: any;
 
 const DICT_URL = '/dictionary.json';
 const MAX_WORD_LENGTH = 20
-
+const MIN_BIGRAM_COUNT = 500;
 
 @Injectable()
 export class DictionaryService {
@@ -41,6 +41,9 @@ export class DictionaryService {
             this.bigrams[bigram]++;
           }
         })
+        for (var bigram in this.bigrams) {
+          if (this.bigrams[bigram] < MIN_BIGRAM_COUNT) delete this.bigrams[bigram];
+        }
         return this.byLength;
       })
       .catch(this.handleError);

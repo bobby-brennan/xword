@@ -235,7 +235,25 @@ export class AppComponent {
         var l = clue.cells[j].value;
         if (l && cand.word.charAt(j) !== l) match = false;
       }
-      if (match) {
+      if (!match) continue;
+
+      var bigramsAreOK = true;
+      var otherDirClues = this.downClues.indexOf(clue) === -1 ? this.downClues : this.acrossClues;
+      clue.cells.forEach((cell, idx) => {
+        var intersections = otherDirClues.filter(crossClue => crossClue.cells.indexOf(cell) !== -1);
+        intersections.forEach(iClue => {
+          var cellIdx = iClue.cells.indexOf(cell);
+          if (cellIdx > 0 && iClue.cells[cellIdx - 1].value) {
+            var leftBigram = iClue.cells[cellIdx - 1].value + cand.word.charAt(idx);
+            if (!this.dictionary.bigrams[leftBigram]) bigramsAreOK = false;
+          }
+          if (cellIdx < iClue.cells.length - 1 && iClue.cells[cellIdx + 1].value) {
+            var rightBigram = iClue.cells[cellIdx + 1].value + cand.word.charAt(idx);
+            if (!this.dictionary.bigrams[rightBigram]) bigramsAreOK = false;
+          }
+        })
+      })
+      if (bigramsAreOK) {
         clue.cells.forEach((c, idx) => {
           c.value = cand.word.charAt(idx);
           c.autocompleted = true;
