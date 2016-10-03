@@ -33,12 +33,12 @@ const START_GRID = [
               </div>
             </div>
             <div class="col-xs-6 col-md-3">
-              <label>Size: {{gridSize}}</label><br>
+              <label>Size: {{grid.length}}</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary fa fa-minus"
-                      [disabled]="gridSize <= 5" (click)="gridSize = gridSize - 1; changeSize()"></button>
+                      [disabled]="grid.length <= 5" (click)="changeSize(grid.length - 1)"></button>
                 <button class="btn btn-primary fa fa-plus"
-                      [disabled]="gridSize >= 30" (click)="gridSize = gridSize + 1; changeSize()"></button>
+                      [disabled]="grid.length >= 30" (click)="changeSize(grid.length + 1)"></button>
               </div>
             </div>
             <div class="col-xs-6 col-md-3">
@@ -87,7 +87,6 @@ const START_GRID = [
 export class AppComponent {
   title: 'XWord';
   grid: any[][];
-  gridSize: number=START_GRID.length;
   acrossClues: any[]=[];
   downClues: any[]=[];
   autocompleteSteps: any;
@@ -140,12 +139,12 @@ export class AppComponent {
     }
   }
 
-  changeSize() {
-    while (this.gridSize < this.grid.length) {
+  changeSize(newSize) {
+    while (newSize < this.grid.length) {
       this.grid.forEach(r => r.pop());
       this.grid.pop();
     }
-    while (this.gridSize > this.grid.length) {
+    while (newSize > this.grid.length) {
       var newRow = [];
       for (var i = 0; i < this.grid.length; ++i) newRow.push({});
       this.grid.push(newRow);
