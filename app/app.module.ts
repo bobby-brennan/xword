@@ -8,6 +8,8 @@ import {APP_BASE_HREF} from '@angular/common';
 import { appRoutes } from './app.routing';
 import { AppComponent }       from './components/app';
 
+import {DictionaryService} from './services/dictionary';
+
 @NgModule({
   imports: [
     HttpModule,
@@ -16,7 +18,8 @@ import { AppComponent }       from './components/app';
     //RouterModule.forRoot(appRoutes),
   ],
   providers: [
-    {provide: APP_BASE_HREF, useValue: '/'}
+    {provide: APP_BASE_HREF, useValue: '/'},
+    DictionaryService,
   ],
   declarations: [
     AppComponent,

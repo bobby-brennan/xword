@@ -1,4 +1,5 @@
 import {Component, ApplicationRef} from '@angular/core';
+import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
 
@@ -58,7 +59,7 @@ export class AppComponent {
   acrossClues: any[]=[];
   downClues: any[]=[];
 
-  constructor() {
+  constructor(private dictionary: DictionaryService) {
     window.app = this;
     this.numberGrid();
   }
