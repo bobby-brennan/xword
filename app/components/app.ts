@@ -18,7 +18,7 @@ const START_GRID = [
     template: `
         <div class="container">
           <div class="row">
-            <div class="col-xs-4">
+            <div class="col-xs-6 col-md-3">
               <label><i class="fa fa-magic"></i>  Autocomplete</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary" (click)="autocompleteAll()" [disabled]="autocompleting">
@@ -32,7 +32,7 @@ const START_GRID = [
                 </button>
               </div>
             </div>
-            <div class="col-xs-4">
+            <div class="col-xs-6 col-md-3">
               <label>Size: {{gridSize}}</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary fa fa-minus"
@@ -41,7 +41,7 @@ const START_GRID = [
                       [disabled]="gridSize >= 30" (click)="gridSize = gridSize + 1; changeSize()"></button>
               </div>
             </div>
-            <div class="col-xs-4">
+            <div class="col-xs-6 col-md-3">
               <label>Edit Mode</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary fa fa-th {{editMode === 'text' ? '' : 'active'}}"
@@ -49,6 +49,10 @@ const START_GRID = [
                 <button class="btn btn-primary fa fa-font {{editMode === 'text' ? 'active' : ''}}"
                       (click)="editMode = 'text'"></button>
               </div>
+            </div>
+            <div class="col-xs-6 col-md-3">
+              <label>Reset</label><br>
+              <a class="btn btn-danger fa fa-undo" (click)="reset()"></a>
             </div>
           </div>
           <div class="puzzle" *ngIf="grid">
@@ -82,21 +86,34 @@ const START_GRID = [
 })
 export class AppComponent {
   title: 'XWord';
-  grid: any[][]=START_GRID.map(r => r.map(c => {
-    return c === 'X' ? {filled: true} : {}
-  }));
+  grid: any[][];
   gridSize: number=START_GRID.length;
   acrossClues: any[]=[];
   downClues: any[]=[];
-  autocompleteSteps: any[]=[];
+  autocompleteSteps: any;
   autocompleting: boolean=false;
   editMode: string='grid';
   timeout: any;
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
+    this.dictionary.getData().then(d => console.log('data ready'));
+    var grid = window.localStorage.getItem('puzzle');
+    if (grid) grid = JSON.parse(grid);
+    this.reset(grid);
+    setInterval(() => this.save(), 1000)
+  }
+
+  reset(grid) {
+    this.autocompleteSteps = [];
+    this.grid = grid || START_GRID.map(r => r.map(c => {
+      return c === 'X' ? {filled: true} : {}
+    }));
     this.numberGrid();
-    this.dictionary.getData().then(d => console.log('data ready'))
+  }
+
+  save() {
+    window.localStorage.setItem('puzzle', JSON.stringify(this.grid));
   }
 
   onKeyUp(event) {
