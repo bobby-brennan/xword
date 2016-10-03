@@ -20,7 +20,7 @@ const START_GRID = [
           <div class="puzzle" *ngIf="grid">
             <div class="puzzle-row" *ngFor="let row of grid">
               <div class="puzzle-square" *ngFor="let cell of row"
-                    (click)="cell.filled = !cell.filled; numberGrid()" [class.filled]="cell.filled">
+                    (click)="puzzleSquareClick(cell)" [class.filled]="cell.filled">
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
                 <input *ngIf="!cell.filled"
                       class="puzzle-value text-uppercase {{cell.autocompleted ? 'autocompleted' : ''}}"
@@ -31,7 +31,7 @@ const START_GRID = [
           </div>
           <div class="row">
             <div class="col-xs-4">
-              <label><i class="fa fa-magic"></i>  Autocomplete</label>
+              <label><i class="fa fa-magic"></i>  Autocomplete</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary" (click)="autocompleteAll()" [disabled]="autocompleting">
                   <span class="fa fa-play"></span>
@@ -45,8 +45,22 @@ const START_GRID = [
               </div>
             </div>
             <div class="col-xs-4">
-              <label>Size</label>
-              <input type="number" [(ngModel)]="gridSize" (change)="changeSize()">
+              <label>Size: {{gridSize}}</label><br>
+              <div class="btn-group">
+                <button class="btn btn-primary fa fa-plus"
+                      [disabled]="gridSize < 5" (click)="gridSize = gridSize + 1; changeSize()"></button>
+                <button class="btn btn-primary fa fa-minus"
+                      [disabled]="gridSize > 30" (click)="gridSize = gridSize - 1; changeSize()"></button>
+              </div>
+            </div>
+            <div class="col-xs-4">
+              <label>Edit Mode</label><br>
+              <div class="btn-group">
+                <button class="btn btn-primary fa fa-th {{editMode === 'text' ? '' : 'active'}}"
+                      (click)="editMode = 'grid'"></button>
+                <button class="btn btn-primary fa fa-font {{editMode === 'text' ? 'active' : ''}}"
+                      (click)="editMode = 'text'"></button>
+              </div>
             </div>
           </div>
           <div class="clues row">
@@ -76,6 +90,7 @@ export class AppComponent {
   downClues: any[]=[];
   autocompleteSteps: any[]=[];
   autocompleting: boolean=false;
+  editMode: string='grid';
   timeout: any;
 
   constructor(private dictionary: DictionaryService) {
@@ -98,6 +113,14 @@ export class AppComponent {
     else if (event.key.match(/[\w]/) && event.key.length === 1 || event.key === 'ArrowRight') cell.next().find('input').focus();
     else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
     else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
+  }
+
+  puzzleSquareClick(cell) {
+    if (this.editMode !== 'text') {
+      cell.filled = !cell.filled;
+      this.numberGrid();
+      return false;
+    }
   }
 
   changeSize() {

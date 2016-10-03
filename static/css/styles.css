@@ -1,6 +1,11 @@
+xword {
+}
+
 .puzzle {
   margin-top: 100px;
-  width: 1000px;
+  width: 100%;
+  overflow: scroll;
+  height: 500px
 }
 
 .puzzle-square {
