@@ -9,7 +9,7 @@ declare let window: any;
 
 const DICT_URL = '/dictionary.json';
 const MAX_WORD_LENGTH = 20
-const MIN_BIGRAM_COUNT = 500;
+const MIN_BIGRAM_COUNT = 50;
 
 @Injectable()
 export class DictionaryService {
