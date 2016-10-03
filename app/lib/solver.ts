@@ -6,50 +6,28 @@ export class Solver {
   constructor(private dictionary, private grid, private clues) {
   }
 
-  getAutocompletion(clue, startVal='', endVal='', checkBigrams=false) {
-    clue.impossible = false;
+  getCompletionCandidates(clue) {
     var cands = this.dictionary.byLength[clue.length - 1];
-    var startIdx = Math.floor(Math.random() * cands.length);
-    if (startVal) {
-      cands.forEach((cand, idx) => {
-        if (cand.word === startVal) startIdx = idx + 1;
-      })
-    }
-    for (var i = 0; i < cands.length; ++i) {
-      var cand = cands[(i + startIdx) % cands.length];
-      if (endVal && endVal === cand.word) return;
+    cands = cands.filter(cand => {
       var match = true;
       for (var j = 0; match && j < clue.cells.length; ++j) {
         var l = clue.cells[j].value;
         if (l && cand.word.charAt(j) !== l) match = false;
       }
-      if (!match) continue;
-
-      if (checkBigrams) {
-        var bigramsAreOK = true;
-        var dir = this.clues.down.indexOf(clue) === -1 ? 'down' : 'across';
-        clue.cells.forEach((cell, idx) => {
-          var iClue = this.getCluesForCell(cell)[dir];
-          if (!iClue) return;
-          var cellIdx = iClue.cells.indexOf(cell);
-          if (cellIdx > 0 && iClue.cells[cellIdx - 1].value) {
-            var leftBigram = iClue.cells[cellIdx - 1].value + cand.word.charAt(idx);
-            if (!this.dictionary.bigrams[leftBigram]) bigramsAreOK = false;
-          }
-          if (cellIdx < iClue.cells.length - 1 && iClue.cells[cellIdx + 1].value) {
-            var rightBigram = cand.word.charAt(idx) + iClue.cells[cellIdx + 1].value;
-            if (!this.dictionary.bigrams[rightBigram]) bigramsAreOK = false;
-          }
-        })
-        if (!bigramsAreOK) continue;
-      }
-      return cand.word;
-    }
-    clue.impossible = true;
-    return false;
+      return match;
+    })
+    return cands;
   }
+
+  getAutocompletion(clue, startVal='', endVal='') {
+    var candidates = this.getCompletionCandidates(clue).map(c => c.word);
+    if (!candidates.length) return;
+    var idx = startVal ? candidates.indexOf(startVal) + 1 : Math.floor(Math.random() * candidates.length);
+    return candidates[idx] === endVal ? null : candidates[idx];
+  }
+
   autocomplete(clue, startVal='', endVal='') {
-    var completion = this.getAutocompletion(clue, startVal, endVal, true);
+    var completion = this.getAutocompletion(clue, startVal, endVal);
     if (completion) {
       clue.cells.forEach((c, idx) => {
         if (!c.value) c.autocompleted = true;
@@ -100,17 +78,19 @@ export class Solver {
 
   getMostConstrainedClue() {
     var maxClue = null;
-    var maxConstraint = -1.0;
+    var minCompletions = Infinity;
     this.clues.across.concat(this.clues.down).forEach(clue => {
-      if (clue.cells.filter(c => !c.value).length && !this.getAutocompletion(clue)) {
+      var isFull = !clue.cells.filter(c => !c.value).length;
+      var isAutocompleted = clue.cells.filter(c => c.autocompleted).length;
+      if (isFull) {
+        var value = clue.cells.map(c => c.value).join('');
+        if (isAutocompleted && this.dictionary.words.indexOf(value) === -1) return clue;
+        return;
+      }
+      var completions = this.getCompletionCandidates(clue);
+      if (completions.length < minCompletions) {
         maxClue = clue;
-        maxConstraint = 1.0;
-      } else {
-        var constraint = clue.cells.filter(c => c.value).length / clue.length;
-        if (constraint < 1.0 && constraint > maxConstraint) {
-          maxClue = clue;
-          maxConstraint = constraint;
-        }
+        minCompletions = completions.length;
       }
     })
     return maxClue;
