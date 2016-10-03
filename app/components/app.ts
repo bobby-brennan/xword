@@ -273,8 +273,8 @@ export class AppComponent {
       })
       if (bigramsAreOK) {
         clue.cells.forEach((c, idx) => {
+          if (!c.value) c.autocompleted = true;
           c.value = cand.word.charAt(idx);
-          c.autocompleted = true;
         })
         return cand.word;
       }
