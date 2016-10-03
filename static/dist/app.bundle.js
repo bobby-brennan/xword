@@ -42123,7 +42123,7 @@ webpackJsonp([0],[
 	        this.grid = grid || START_GRID.map(function (r) { return r.map(function (c) {
 	            return c === 'X' ? { filled: true } : {};
 	        }); });
-	        this.numberGrid();
+	        this.resetGrid();
 	    };
 	    AppComponent.prototype.save = function () {
 	        window.localStorage.setItem('puzzle', JSON.stringify(this.grid));
@@ -42151,7 +42151,8 @@ webpackJsonp([0],[
 	    AppComponent.prototype.puzzleSquareClick = function (cell) {
 	        if (this.editMode !== 'text') {
 	            cell.filled = !cell.filled;
-	            this.numberGrid();
+	            this.getMirrorCell(cell).filled = cell.filled;
+	            this.resetGrid();
 	            return false;
 	        }
 	    };
@@ -42167,7 +42168,7 @@ webpackJsonp([0],[
 	            this.grid.push(newRow);
 	            this.grid.forEach(function (r) { return r.push({}); });
 	        }
-	        this.numberGrid();
+	        this.resetGrid();
 	    };
 	    AppComponent.prototype.validateCell = function (cell) {
 	        if (!cell.value)
@@ -42194,8 +42195,31 @@ webpackJsonp([0],[
 	            return cells;
 	        }
 	    };
-	    AppComponent.prototype.numberGrid = function () {
+	    AppComponent.prototype.getMirrorCell = function (cell) {
 	        var _this = this;
+	        var mCell = null;
+	        this.grid.forEach(function (row, rowIdx) {
+	            row.forEach(function (otherCell, cellIdx) {
+	                if (cell === otherCell) {
+	                    mCell = _this.grid[_this.grid.length - rowIdx - 1][_this.grid.length - cellIdx - 1];
+	                }
+	            });
+	        });
+	        return mCell;
+	    };
+	    AppComponent.prototype.mirrorFilledCells = function () {
+	        var _this = this;
+	        this.grid.forEach(function (row, rowIdx) {
+	            row.forEach(function (cell, cellIdx) {
+	                var loc = [rowIdx, cellIdx];
+	                var mirrorLoc = [_this.grid.length - loc[0] - 1, _this.grid.length - loc[1] - 1];
+	                _this.grid[mirrorLoc[0]][mirrorLoc[1]].filled = cell.filled;
+	            });
+	        });
+	    };
+	    AppComponent.prototype.resetGrid = function () {
+	        var _this = this;
+	        this.mirrorFilledCells();
 	        var cur = 1;
 	        this.downClues = [];
 	        this.acrossClues = [];
@@ -42298,6 +42322,7 @@ webpackJsonp([0],[
 	        if (!lastStep)
 	            return;
 	        lastStep.blanks.forEach(function (c) { return c.value = ''; });
+	        lastStep.clue.prompt = '';
 	        if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
 	            return this.unwindAutocompletion();
 	        }
@@ -42374,6 +42399,7 @@ webpackJsonp([0],[
 	                    c.autocompleted = true;
 	                c.value = completion.charAt(idx);
 	            });
+	            clue.prompt = this.dictionary.clues[completion.toUpperCase()] || '';
 	        }
 	        return completion;
 	    };
@@ -42420,7 +42446,7 @@ webpackJsonp([0],[
 	__webpack_require__(32);
 	__webpack_require__(34);
 	__webpack_require__(41);
-	var DICT_URL = 'dictionary.json';
+	var DICT_URL = 'clues_filtered.json';
 	var MAX_WORD_LENGTH = 20;
 	var MIN_BIGRAM_COUNT = 50;
 	var DictionaryService = (function () {
@@ -42436,9 +42462,10 @@ webpackJsonp([0],[
 	        return this.http.get(DICT_URL)
 	            .toPromise()
 	            .then(function (data) {
-	            _this.words = data.json()
+	            _this.clues = data.json();
+	            _this.words = Object.keys(_this.clues)
 	                .filter(function (s) { return s.length <= MAX_WORD_LENGTH; })
-	                .map(function (s, idx) { return ({ word: s, frequency: idx }); });
+	                .map(function (s, idx) { return ({ word: s.toLowerCase(), frequency: idx }); });
 	            _this.bigrams = {};
 	            _this.words.forEach(function (w) {
 	                var arr = _this.byLength[w.word.length - 1];
