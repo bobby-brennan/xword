@@ -1,4 +1,5 @@
 import {Component, ApplicationRef} from '@angular/core';
+import {Solver} from '../lib/solver';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
@@ -27,7 +28,7 @@ const START_GRID = [
                 <button class="btn btn-primary" (click)="pauseAutocomplete()" [disabled]="!autocompleting">
                   <span class="fa fa-pause"></span>
                 </button>
-                <button class="btn btn-primary" (click)="autocompleteStep()" [disabled]="autocompleting">
+                <button class="btn btn-primary" (click)="solver.step()" [disabled]="autocompleting">
                   <span class="fa fa-step-forward"></span>
                 </button>
               </div>
@@ -68,11 +69,11 @@ const START_GRID = [
             </div>
           </div>
           <div class="clues row">
-            <div *ngFor="let clueSet of [acrossClues, downClues]" class="col-xs-12 col-md-6">
-              <h4>{{ clueSet === acrossClues ? 'Across' : 'Down' }}</h4>
+            <div *ngFor="let clueSet of [clues.across, clues.down]" class="col-xs-12 col-md-6">
+              <h4>{{ clueSet === clues.across ? 'Across' : 'Down' }}</h4>
               <div *ngFor="let clue of clueSet" class="clue">
-                <a (click)="autocomplete(clue)"
-                      class="btn btn-sm {{!getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
+                <a (click)="solver.autocomplete(clue)"
+                      class="btn btn-sm {{!solver.getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
                    <span class="fa fa-magic"></span>
                 </a>
                 <span class="clue-number">{{clue.number}}.</span>
@@ -90,12 +91,15 @@ const START_GRID = [
 export class AppComponent {
   title: 'XWord';
   grid: any[][];
-  acrossClues: any[]=[];
-  downClues: any[]=[];
-  autocompleteSteps: any;
+  clues = {
+    down: [],
+    across: [],
+  }
   autocompleting: boolean=false;
   editMode: string='grid';
   timeout: any;
+
+  solver: Solver;
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
@@ -103,15 +107,16 @@ export class AppComponent {
     var grid = window.localStorage.getItem('puzzle');
     if (grid) grid = JSON.parse(grid);
     this.reset(grid);
+    this.solver = new Solver(this.dictionary, this.grid, this.clues);
     setInterval(() => this.save(), 1000)
   }
 
   reset(grid) {
-    this.autocompleteSteps = [];
     this.grid = grid || START_GRID.map(r => r.map(c => {
       return c === 'X' ? {filled: true} : {}
     }));
     this.resetGrid();
+    this.solver = new Solver(this.dictionary, this.grid, this.clues);
   }
 
   save() {
@@ -204,8 +209,8 @@ export class AppComponent {
   resetGrid() {
     this.mirrorFilledCells();
     var cur = 1;
-    this.downClues = [];
-    this.acrossClues = [];
+    this.clues.down = [];
+    this.clues.across = [];
     this.grid.forEach((row, i) => {
       row.forEach((cell, j) => {
         if (cell.filled) return;
@@ -220,14 +225,14 @@ export class AppComponent {
             while (i + length < this.grid.length && !this.grid[i + length][j].filled) ++length;
             var clue = {number: cur, length: length, start: [i, j], cells: []};
             clue.cells = this.getCells('down', clue.start, clue.length);
-            this.downClues.push(clue);
+            this.clues.down.push(clue);
           }
           if (left && !right) {
             var length = 0;
             while (j + length < this.grid[0].length && !this.grid[i][j+length].filled) ++length;
             var clue = {number: cur, length: length, start: [i, j], cells: []};
             clue.cells = this.getCells('across', clue.start, clue.length);
-            this.acrossClues.push(clue);
+            this.clues.across.push(clue);
           }
           cell.number = cur++;
         }
@@ -235,28 +240,10 @@ export class AppComponent {
     })
   }
 
-  getMostConstrainedClue() {
-    var maxClue = null;
-    var maxConstraint = -1.0;
-    this.acrossClues.concat(this.downClues).forEach(clue => {
-      if (clue.cells.filter(c => !c.value).length && !this.getAutocompletion(clue)) {
-        maxClue = clue;
-        maxConstraint = 1.0;
-      } else {
-        var constraint = clue.cells.filter(c => c.value).length / clue.length;
-        if (constraint < 1.0 && constraint > maxConstraint) {
-          maxClue = clue;
-          maxConstraint = constraint;
-        }
-      }
-    })
-    return maxClue;
-  }
-
   autocompleteAll() {
     this.autocompleting = true;
     var nextStep = () => {
-      var completed = this.autocompleteStep();
+      var completed = this.solver.step();
       if (completed) {
         this.timeout = setTimeout(() => nextStep(), 1)
       } else {
@@ -270,112 +257,5 @@ export class AppComponent {
     clearTimeout(this.timeout);
     this.timeout = null;
     this.autocompleting = false;
-  }
-
-  autocompleteStep() {
-    var nextClue = this.getMostConstrainedClue();
-    if (!nextClue) return;
-    var blanks = nextClue.cells.filter(c => !c.value);
-    var completion = this.autocomplete(nextClue);
-    if (completion) {
-      var firstAttempt = nextClue.cells.map(c => c.value).join('');
-      var lastAttempt = firstAttempt;
-      this.autocompleteSteps.push({
-        firstAttempt,
-        lastAttempt,
-        blanks,
-        clue: nextClue,
-      });
-    } else {
-      if (!this.unwindAutocompletion(this.getIntersectingClues(nextClue))) {
-        console.log("Can't unwind anymore");
-        return;
-      }
-    }
-    return true;
-  }
-
-  unwindAutocompletion(targetClues=null) {
-    var lastStep = this.autocompleteSteps.pop();
-    if (!lastStep) return;
-    lastStep.blanks.forEach(c => c.value = '');
-    lastStep.clue.prompt = '';
-    if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
-      return this.unwindAutocompletion();
-    }
-    var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
-    if (completion) {
-      lastStep.lastAttempt = completion;
-      this.autocompleteSteps.push(lastStep);
-      return true;
-    } else {
-      return this.unwindAutocompletion();
-    }
-  }
-
-  getAutocompletion(clue, startVal='', endVal='', checkBigrams=false) {
-    clue.impossible = false;
-    var cands = this.dictionary.byLength[clue.length - 1];
-    var startIdx = Math.floor(Math.random() * cands.length);
-    if (startVal) {
-      cands.forEach((cand, idx) => {
-        if (cand.word === startVal) startIdx = idx + 1;
-      })
-    }
-    for (var i = 0; i < cands.length; ++i) {
-      var cand = cands[(i + startIdx) % cands.length];
-      if (endVal && endVal === cand.word) return;
-      var match = true;
-      for (var j = 0; match && j < clue.cells.length; ++j) {
-        var l = clue.cells[j].value;
-        if (l && cand.word.charAt(j) !== l) match = false;
-      }
-      if (!match) continue;
-
-      if (checkBigrams) {
-        var bigramsAreOK = true;
-        var dir = this.downClues.indexOf(clue) === -1 ? 'down' : 'across';
-        clue.cells.forEach((cell, idx) => {
-          var iClue = this.getCluesForCell(cell)[dir];
-          if (!iClue) return;
-          var cellIdx = iClue.cells.indexOf(cell);
-          if (cellIdx > 0 && iClue.cells[cellIdx - 1].value) {
-            var leftBigram = iClue.cells[cellIdx - 1].value + cand.word.charAt(idx);
-            if (!this.dictionary.bigrams[leftBigram]) bigramsAreOK = false;
-          }
-          if (cellIdx < iClue.cells.length - 1 && iClue.cells[cellIdx + 1].value) {
-            var rightBigram = cand.word.charAt(idx) + iClue.cells[cellIdx + 1].value;
-            if (!this.dictionary.bigrams[rightBigram]) bigramsAreOK = false;
-          }
-        })
-        if (!bigramsAreOK) continue;
-      }
-      return cand.word;
-    }
-    clue.impossible = true;
-    return false;
-  }
-
-  autocomplete(clue, startVal='', endVal='') {
-    var completion = this.getAutocompletion(clue, startVal, endVal, true);
-    if (completion) {
-      clue.cells.forEach((c, idx) => {
-        if (!c.value) c.autocompleted = true;
-        c.value = completion.charAt(idx);
-      })
-      clue.prompt = this.dictionary.clues[completion.toUpperCase()] || '';
-    }
-    return completion;
-  }
-
-  getIntersectingClues(clue) {
-    var dir = this.downClues.indexOf(clue) === -1 ? 'down' : 'across';
-    return clue.cells.map(cell => this.getCluesForCell(cell)[dir]).filter(clue => clue);
-  }
-
-  getCluesForCell(cell) {
-    var down = this.downClues.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
-    var across = this.acrossClues.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
-    return {down, across}
   }
 }
