@@ -111,7 +111,7 @@ export class AppComponent {
     this.grid = grid || START_GRID.map(r => r.map(c => {
       return c === 'X' ? {filled: true} : {}
     }));
-    this.numberGrid();
+    this.resetGrid();
   }
 
   save() {
@@ -137,7 +137,8 @@ export class AppComponent {
   puzzleSquareClick(cell) {
     if (this.editMode !== 'text') {
       cell.filled = !cell.filled;
-      this.numberGrid();
+      this.getMirrorCell(cell).filled = cell.filled;
+      this.resetGrid();
       return false;
     }
   }
@@ -153,7 +154,7 @@ export class AppComponent {
       this.grid.push(newRow);
       this.grid.forEach(r => r.push({}))
     }
-    this.numberGrid();
+    this.resetGrid();
   }
 
   validateCell(cell) {
@@ -178,7 +179,30 @@ export class AppComponent {
     }
   }
 
-  numberGrid() {
+  getMirrorCell(cell) {
+    var mCell = null;
+    this.grid.forEach((row, rowIdx) => {
+      row.forEach((otherCell, cellIdx) => {
+        if (cell === otherCell) {
+          mCell = this.grid[this.grid.length - rowIdx - 1][this.grid.length - cellIdx - 1];
+        }
+      })
+    })
+    return mCell;
+  }
+
+  mirrorFilledCells() {
+    this.grid.forEach((row, rowIdx) => {
+      row.forEach((cell, cellIdx) => {
+        var loc = [rowIdx, cellIdx];
+        var mirrorLoc = [this.grid.length - loc[0] - 1, this.grid.length - loc[1] - 1];
+        this.grid[mirrorLoc[0]][mirrorLoc[1]].filled = cell.filled;
+      })
+    })
+  }
+
+  resetGrid() {
+    this.mirrorFilledCells();
     var cur = 1;
     this.downClues = [];
     this.acrossClues = [];
