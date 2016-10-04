@@ -40,7 +40,6 @@ export class Solver {
 
   step() {
     var nextClue = this.getMostConstrainedClue();
-    console.log('next', nextClue);
     if (!nextClue) {
       this.fillPrompts();
       return true;
