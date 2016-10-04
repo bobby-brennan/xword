@@ -42185,9 +42185,9 @@ webpackJsonp([0],[
 	            row.next().children().eq(colIdx).find('input').focus();
 	    };
 	    AppComponent.prototype.puzzleSquareClick = function (cell) {
-	        if (this.editMode !== 'text') {
+	        if (this.editMode === 'grid') {
 	            cell.toggleFill();
-	            this.grid.getMirrorCell(cell).toggleFill();
+	            this.grid.getMirrorCell(cell).toggleFill(cell.filled);
 	            this.grid.reset();
 	            return false;
 	        }
