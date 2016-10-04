@@ -8,8 +8,13 @@ export class Cell {
 
 export class Clue {
   prompt: string;
-  cells: Cell[];
 
+  constructor(public number:number, public cells: Cell[]) {
+  }
+
+  isEmpty() {
+    return !this.cells.filter(c => c.value ? true : false).length;
+  }
   isFull() {
     return !this.cells.filter(c => !c.value).length;
   }
@@ -18,14 +23,22 @@ export class Clue {
   }
 }
 
+export class ClueSet {
+  constructor(public down:Clue[], public across:Clue[]) {}
+
+  getClues() {
+    return this.across.concat(this.down);
+  }
+}
+
 export class Solver {
   steps: any[]=[];
 
-  constructor(private dictionary, private grid: Cell[][], private clues) {
+  constructor(private dictionary, private grid: Cell[][], private clues: ClueSet) {
   }
 
   getCompletionCandidates(clue) {
-    var cands = this.dictionary.byLength[clue.length - 1];
+    var cands = this.dictionary.byLength[clue.cells.length - 1];
     cands = cands.filter(cand => {
       var match = true;
       for (var j = 0; match && j < clue.cells.length; ++j) {
@@ -59,9 +72,7 @@ export class Solver {
   step() {
     var nextClue = this.getMostConstrainedClue();
     if (!nextClue) return;
-    var isAutocompleted = nextClue.cells.filter(c => c.autocompleted).length;
-    var isFull = !nextClue.cells.filter(c => !c.value).length;
-    if (isAutocompleted && isFull) {
+    if (nextClue.isAutocompleted() && nextClue.isFull()) {
       this.unwind(this.getIntersectingClues(nextClue));
       return true;
     }
@@ -103,25 +114,22 @@ export class Solver {
   getMostConstrainedClue() {
     var maxClue = null;
     var minCompletions = Infinity;
-    this.clues.across.concat(this.clues.down).forEach(clue => {
-      var isEmpty = !clue.cells.filter(c => c.value).length;
-      if (isEmpty && !maxClue) {
+    this.clues.getClues().forEach(clue => {
+      if (clue.isEmpty() && !maxClue) {
         maxClue = clue;
-      }
-      var isFull = !clue.cells.filter(c => !c.value).length;
-      if (isFull) {
+      } else if (clue.isFull()) {
         var value = clue.cells.map(c => c.value).join('');
         var isAutocompleted = clue.cells.filter(c => c.autocompleted).length;
         if (isAutocompleted && !this.dictionary.contains(value)) {
           maxClue = clue;
           minCompletions = 0;
         }
-        return;
-      }
-      var completions = this.getCompletionCandidates(clue);
-      if (completions.length < minCompletions) {
-        maxClue = clue;
-        minCompletions = completions.length;
+      } else {
+        var completions = this.getCompletionCandidates(clue);
+        if (completions.length < minCompletions) {
+          maxClue = clue;
+          minCompletions = completions.length;
+        }
       }
     })
     return maxClue;

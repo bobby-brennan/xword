@@ -1,5 +1,5 @@
 import {Component, ApplicationRef} from '@angular/core';
-import {Solver, Clue, Cell} from '../lib/solver';
+import {Solver, Clue, Cell, ClueSet} from '../lib/solver';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
@@ -91,10 +91,7 @@ const START_GRID = [
 export class AppComponent {
   title: 'XWord';
   grid: Cell[][];
-  clues = {
-    down: [],
-    across: [],
-  }
+  clues: ClueSet;
   autocompleting: boolean=false;
   editMode: string='grid';
   timeout: any;
@@ -103,6 +100,7 @@ export class AppComponent {
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
+    this.clues = new ClueSet([], []);
     this.dictionary.getData().then(d => console.log('data ready'));
     var grid = window.localStorage.getItem('puzzle');
     if (grid) grid = JSON.parse(grid);
@@ -223,15 +221,13 @@ export class AppComponent {
           if (above && !below) {
             var length = 0;
             while (i + length < this.grid.length && !this.grid[i + length][j].filled) ++length;
-            var clue = {number: cur, length: length, start: [i, j], cells: []};
-            clue.cells = this.getCells('down', clue.start, clue.length);
+            var clue = new Clue(cur, this.getCells('down', [i,j], length));
             this.clues.down.push(clue);
           }
           if (left && !right) {
             var length = 0;
             while (j + length < this.grid[0].length && !this.grid[i][j+length].filled) ++length;
-            var clue = {number: cur, length: length, start: [i, j], cells: []};
-            clue.cells = this.getCells('across', clue.start, clue.length);
+            var clue = new Clue(cur, this.getCells('across', [i,j], length));
             this.clues.across.push(clue);
           }
           cell.number = cur++;
