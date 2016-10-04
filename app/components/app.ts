@@ -70,8 +70,8 @@ const START_GRID = [
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
                 <input *ngIf="!cell.filled"
                       class="puzzle-value text-uppercase {{cell.autocompleted ? 'autocompleted' : ''}}"
-                      (keyup)="onGridKeyUp($event)"
-                      [(ngModel)]="cell.value" (change)="validateCell(cell)">
+                      (keyup)="onGridKeyUp($event, cell)"
+                      [(ngModel)]="cell.value">
               </div>
             </div>
           </div>
@@ -161,13 +161,18 @@ export class AppComponent {
     else if (event.key.match(/[\w]/) && event.key.length === 1) $(':focus').next().focus();
   }
 
-  onGridKeyUp(event) {
+  onGridKeyUp(event, cell) {
+    var isLetter = event.key.match(/[\w]/) && event.key.length === 1;
+    if (isLetter) {
+      cell.value = event.key.toLowerCase();
+      this.validateCell(cell);
+    }
     var focused = $(':focus');
     var cell = focused.parent();
     var row = cell.parent();
     var colIdx = row.children().index(cell.get(0));
     if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
-    else if (event.key.match(/[\w]/) && event.key.length === 1 || event.key === 'ArrowRight') cell.next().find('input').focus();
+    else if (isLetter || event.key === 'ArrowRight') cell.next().find('input').focus();
     else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
     else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
   }
