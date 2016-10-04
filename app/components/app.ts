@@ -35,12 +35,12 @@ const START_GRID = [
               </div>
             </div>
             <div class="col-xs-6 col-md-3">
-              <label>Size: {{grid.length}}</label><br>
+              <label>Size: {{grid.cells.length}}</label><br>
               <div class="btn-group">
                 <button class="btn btn-primary fa fa-minus"
-                      [disabled]="grid.length <= 5" (click)="grid.changeSize(grid.cells.length - 1)"></button>
+                      [disabled]="grid.cells.length <= 5" (click)="grid.changeSize(grid.cells.length - 1)"></button>
                 <button class="btn btn-primary fa fa-plus"
-                      [disabled]="grid.length >= 30" (click)="grid.changeSize(grid.cells.length + 1)"></button>
+                      [disabled]="grid.cells.length >= 30" (click)="grid.changeSize(grid.cells.length + 1)"></button>
               </div>
             </div>
             <div class="col-xs-6 col-md-3">
