@@ -109,11 +109,16 @@ export class AppComponent {
     window.app = this;
     this.clues = new ClueSet([], []);
     this.dictionary.getData().then(d => console.log('data ready'));
-    var grid = window.localStorage.getItem('puzzle');
-    if (grid) grid = JSON.parse(grid);
-    this.reset(grid);
+    this.reset(this.maybeLoad());
     this.solver = new Solver(this.dictionary, this.grid, this.clues);
     setInterval(() => this.save(), 1000)
+  }
+
+  maybeLoad() {
+    var grid = window.localStorage.getItem('puzzle');
+    if (!grid) return;
+    grid = JSON.parse(grid);
+    return grid.map(row => row.map(cell => new Cell(cell)))
   }
 
   reset(grid) {
@@ -157,10 +162,10 @@ export class AppComponent {
     else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
   }
 
-  puzzleSquareClick(cell) {
+  puzzleSquareClick(cell: Cell) {
     if (this.editMode !== 'text') {
-      cell.filled = !cell.filled;
-      this.getMirrorCell(cell).filled = cell.filled;
+      cell.toggleFill();
+      this.getMirrorCell(cell).toggleFill();
       this.resetGrid();
       return false;
     }

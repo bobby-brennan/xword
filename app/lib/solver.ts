@@ -4,6 +4,20 @@ export class Cell {
   autocompleted: boolean;
   filled: boolean;
   number: number;
+
+  constructor(cell?: Cell) {
+    if (cell) {
+      this.value = cell.value;
+      this.autocompleted = cell.autocompleted;
+      this.filled = cell.filled;
+      this.number = cell.number;
+    }
+  }
+
+  toggleFill() {
+    this.filled = !this.filled;
+    if (this.filled) this.number = null;
+  }
 }
 
 export class Clue {
