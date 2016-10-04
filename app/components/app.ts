@@ -53,7 +53,10 @@ const START_GRID = [
             </div>
             <div class="col-xs-6 col-md-3">
               <label>Reset</label><br>
-              <a class="btn btn-danger fa fa-undo" (click)="reset()"></a>
+              <div class="btn-group">
+                <a class="btn btn-danger fa fa-trash" (click)="reset()"></a>
+                <a class="btn btn-danger fa fa-font" (click)="resetText()"></a>
+              </div>
             </div>
           </div>
           <div class="puzzle" *ngIf="grid">
@@ -115,6 +118,15 @@ export class AppComponent {
     }));
     this.resetGrid();
     this.solver = new Solver(this.dictionary, this.grid, this.clues);
+  }
+
+  resetText() {
+    this.grid.forEach(row => {
+      row.forEach(cell => {
+        cell.autocompleted = false;
+        cell.value = '';
+      })
+    })
   }
 
   save() {
