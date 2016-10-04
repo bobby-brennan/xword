@@ -108,10 +108,12 @@ export class AppComponent {
   constructor(private dictionary: DictionaryService) {
     window.app = this;
     this.clues = new ClueSet([], []);
-    this.dictionary.getData().then(d => console.log('data ready'));
-    this.reset(this.maybeLoad());
-    this.solver = new Solver(this.dictionary, this.grid, this.clues);
-    setInterval(() => this.save(), 1000)
+    this.grid = [[]];
+    this.dictionary.getData().then(d => {
+      this.reset(this.maybeLoad());
+      this.solver = new Solver(this.dictionary, this.grid, this.clues);
+      setInterval(() => this.save(), 1000)
+    });
   }
 
   maybeLoad() {
@@ -129,6 +131,7 @@ export class AppComponent {
     }));
     this.resetGrid();
     this.solver = new Solver(this.dictionary, this.grid, this.clues);
+    this.solver.fillPrompts();
   }
 
   resetText() {

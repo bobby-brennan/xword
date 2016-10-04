@@ -35,6 +35,9 @@ export class Clue {
   isAutocompleted() {
     return this.cells.filter(c => c.autocompleted).length;
   }
+  getValue() {
+    return this.cells.map(c => c.value).join('');
+  }
 }
 
 export class ClueSet {
@@ -85,7 +88,10 @@ export class Solver {
 
   step() {
     var nextClue = this.getMostConstrainedClue();
-    if (!nextClue) return true;
+    if (!nextClue) {
+      this.fillPrompts();
+      return true;
+    }
     if (nextClue.isAutocompleted() && nextClue.isFull()) {
       return this.unwind() ? null : false;
     }
@@ -122,6 +128,12 @@ export class Solver {
     } else {
       return this.unwind(targetClues);
     }
+  }
+
+  fillPrompts() {
+    this.clues.getClues().forEach(clue => {
+      if (!clue.prompt) clue.prompt = this.dictionary.getPrompt(clue.getValue());
+    })
   }
 
   getMostConstrainedClue() {

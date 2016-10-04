@@ -26,6 +26,10 @@ export class DictionaryService {
   }
 
   contains(s: string) {
+    return this.getPrompt(s) ? true : false;
+  }
+
+  getPrompt(s: string) {
     return this.clues[s.toUpperCase()];
   }
 
