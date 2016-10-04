@@ -84,7 +84,7 @@ export class Solver {
 
   fillPrompts() {
     this.grid.clues.getClues().forEach(clue => {
-      if (!clue.prompt) clue.prompt = this.dictionary.getPrompt(clue.getValue());
+      if (!clue.prompt && clue.isFull()) clue.prompt = this.dictionary.getPrompt(clue.getValue());
     })
   }
 
