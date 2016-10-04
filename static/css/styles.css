@@ -2,6 +2,10 @@ body {
   padding-top: 100px;
 }
 
+xword .alert {
+  margin-top: 20px;
+}
+
 .puzzle {
   margin-top: 20px;
   margin-bottom: 20px;

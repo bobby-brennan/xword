@@ -71,10 +71,9 @@ export class Solver {
 
   step() {
     var nextClue = this.getMostConstrainedClue();
-    if (!nextClue) return;
+    if (!nextClue) return true;
     if (nextClue.isAutocompleted() && nextClue.isFull()) {
-      this.unwind(this.getIntersectingClues(nextClue));
-      return true;
+      return this.unwind() ? null : false;
     }
     var blanks = nextClue.cells.filter(c => !c.value);
     var completion = this.autocomplete(nextClue);
@@ -87,10 +86,10 @@ export class Solver {
         blanks,
         clue: nextClue,
       });
+      return null;
     } else {
-      this.unwind(this.getIntersectingClues(nextClue));
+      return this.unwind() ? null : false;
     }
-    return true;
   }
 
   unwind(targetClues=null) {

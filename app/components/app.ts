@@ -22,7 +22,7 @@ const START_GRID = [
             <div class="col-xs-6 col-md-3">
               <label><i class="fa fa-magic"></i>  Autocomplete</label><br>
               <div class="btn-group">
-                <button class="btn btn-primary" (click)="autocompleteAll()" [disabled]="autocompleting">
+                <button class="btn btn-primary" (click)="startAutocomplete()" [disabled]="autocompleting">
                   <span class="fa fa-play"></span>
                 </button>
                 <button class="btn btn-primary" (click)="pauseAutocomplete()" [disabled]="!autocompleting">
@@ -58,6 +58,9 @@ const START_GRID = [
                 <a class="btn btn-danger fa fa-font" (click)="resetText()"></a>
               </div>
             </div>
+          </div>
+          <div *ngIf="alert" class="alert alert-{{alert.class}}">
+            {{alert.text}}
           </div>
           <div class="puzzle" *ngIf="grid">
             <div class="puzzle-row" *ngFor="let row of grid">
@@ -98,6 +101,7 @@ export class AppComponent {
   autocompleting: boolean=false;
   editMode: string='grid';
   timeout: any;
+  alert: any;
 
   solver: Solver;
 
@@ -113,6 +117,8 @@ export class AppComponent {
   }
 
   reset(grid) {
+    this.pauseAutocomplete();
+    this.alert = null;
     this.grid = grid || START_GRID.map(r => r.map(c => {
       return c === 'X' ? {filled: true} : {}
     }));
@@ -121,6 +127,8 @@ export class AppComponent {
   }
 
   resetText() {
+    this.pauseAutocomplete();
+    this.alert = null;
     this.grid.forEach(row => {
       row.forEach(cell => {
         cell.autocompleted = false;
@@ -248,13 +256,19 @@ export class AppComponent {
     })
   }
 
-  autocompleteAll() {
+  startAutocomplete() {
     this.autocompleting = true;
+    this.alert = {class: 'info', text: "Solving..."}
     var nextStep = () => {
       var completed = this.solver.step();
-      if (completed) {
+      if (completed === null) {
         this.timeout = setTimeout(() => nextStep(), 1)
       } else {
+        if (completed) {
+          this.alert = {class: 'success', text: "Solved!"}
+        } else {
+          this.alert = {class: 'danger', text: "No solution found."}
+        }
         this.autocompleting = false;
       }
     }
@@ -262,8 +276,9 @@ export class AppComponent {
   }
 
   pauseAutocomplete() {
-    clearTimeout(this.timeout);
+    if (this.timeout) clearTimeout(this.timeout);
     this.timeout = null;
     this.autocompleting = false;
+    this.alert = null;
   }
 }
