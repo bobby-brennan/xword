@@ -25,6 +25,10 @@ export class DictionaryService {
     }
   }
 
+  contains(s: string) {
+    return this.clues[s.toUpperCase()];
+  }
+
   getData() {
     return this.http.get(DICT_URL)
       .toPromise()

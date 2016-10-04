@@ -1,5 +1,5 @@
 import {Component, ApplicationRef} from '@angular/core';
-import {Solver} from '../lib/solver';
+import {Solver, Clue, Cell} from '../lib/solver';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
@@ -90,7 +90,7 @@ const START_GRID = [
 })
 export class AppComponent {
   title: 'XWord';
-  grid: any[][];
+  grid: Cell[][];
   clues = {
     down: [],
     across: [],
@@ -155,9 +155,9 @@ export class AppComponent {
     }
     while (newSize > this.grid.length) {
       var newRow = [];
-      for (var i = 0; i < this.grid.length; ++i) newRow.push({});
+      for (var i = 0; i < this.grid.length; ++i) newRow.push(new Cell());
       this.grid.push(newRow);
-      this.grid.forEach(r => r.push({}))
+      this.grid.forEach(r => r.push(new Cell()))
     }
     this.resetGrid();
   }
