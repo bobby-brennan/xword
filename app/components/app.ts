@@ -177,9 +177,9 @@ export class AppComponent {
   }
 
   puzzleSquareClick(cell: Cell) {
-    if (this.editMode !== 'text') {
+    if (this.editMode === 'grid') {
       cell.toggleFill();
-      this.grid.getMirrorCell(cell).toggleFill();
+      this.grid.getMirrorCell(cell).toggleFill(cell.filled);
       this.grid.reset();
       return false;
     }
