@@ -182,6 +182,7 @@ export class AppComponent {
 
   validateCell(cell) {
     if (!cell.value) return;
+    cell.autocompleted = false;
     var c = cell.value.length - 1;
     while (c >= 0 && !cell.value.charAt(c).match(/\w/)) --c
     if (c < 0) cell.value = '';
