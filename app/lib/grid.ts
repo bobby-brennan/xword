@@ -13,8 +13,8 @@ export class Cell {
     }
   }
 
-  toggleFill() {
-    this.filled = !this.filled;
+  toggleFill(val?: boolean) {
+    this.filled = val === undefined ? !this.filled : val;
     if (this.filled) this.number = null;
   }
 }
@@ -111,8 +111,8 @@ export class Grid {
     this.clues.across = [];
     this.cells.forEach((row, i) => {
       row.forEach((cell, j) => {
-        if (cell.filled) return;
         delete cell.number;
+        if (cell.filled) return;
         var above = i === 0 ? true : this.cells[i-1][j].filled;
         var below = i === this.cells.length - 1 ? true : this.cells[i+1][j].filled;
         var left  = j === 0 ? true : this.cells[i][j-1].filled;
