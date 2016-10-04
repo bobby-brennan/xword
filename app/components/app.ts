@@ -79,11 +79,11 @@ const START_GRID = [
             <div *ngFor="let clueSet of ['across', 'down']" class="col-xs-12 col-md-6">
               <h4 class="text-uppercase">{{ clueSet }}</h4>
               <div *ngFor="let clue of grid.clues[clueSet]" class="clue">
+                <span class="clue-number">{{clue.number}}.</span>
                 <a (click)="solver.autocomplete(clue)"
                       class="btn btn-sm {{!solver.getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
                    <span class="fa fa-magic"></span>
                 </a>
-                <span class="clue-number">{{clue.number}}.</span>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
                      *ngFor="let cell of clue.cells"
                      (change)="clue.impossible = false; cell.autocompleted = false; validateCell(cell)"
