@@ -1,5 +1,5 @@
 import {Component, ApplicationRef} from '@angular/core';
-import {Solver, Clue, Cell, ClueSet} from '../lib/solver';
+import {Solver, Clue, Cell, ClueSet, Grid} from '../lib/solver';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
@@ -63,7 +63,7 @@ const START_GRID = [
             {{alert.text}}
           </div>
           <div class="puzzle" *ngIf="grid">
-            <div class="puzzle-row" *ngFor="let row of grid">
+            <div class="puzzle-row" *ngFor="let row of grid.cells">
               <div class="puzzle-square" *ngFor="let cell of row"
                     (click)="puzzleSquareClick(cell)" [class.filled]="cell.filled">
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
@@ -75,9 +75,9 @@ const START_GRID = [
             </div>
           </div>
           <div class="clues row">
-            <div *ngFor="let clueSet of [clues.across, clues.down]" class="col-xs-12 col-md-6">
-              <h4>{{ clueSet === clues.across ? 'Across' : 'Down' }}</h4>
-              <div *ngFor="let clue of clueSet" class="clue">
+            <div *ngFor="let clueSet of ['across', 'down']" class="col-xs-12 col-md-6">
+              <h4 class="text-uppercase">{{ clueSet }}</h4>
+              <div *ngFor="let clue of grid.clues[clueSet]" class="clue">
                 <a (click)="solver.autocomplete(clue)"
                       class="btn btn-sm {{!solver.getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
                    <span class="fa fa-magic"></span>
@@ -96,8 +96,7 @@ const START_GRID = [
 })
 export class AppComponent {
   title: 'XWord';
-  grid: Cell[][];
-  clues: ClueSet;
+  grid: Grid;
   autocompleting: boolean=false;
   editMode: string='text';
   timeout: any;
@@ -107,47 +106,54 @@ export class AppComponent {
 
   constructor(private dictionary: DictionaryService) {
     window.app = this;
-    this.clues = new ClueSet([], []);
-    this.grid = [[]];
+    this.grid = new Grid();
     this.dictionary.getData().then(d => {
       this.reset(this.maybeLoad());
-      this.solver = new Solver(this.dictionary, this.grid, this.clues);
+      this.reset();
+      this.solver = new Solver(this.dictionary, this.grid);
       setInterval(() => this.save(), 1000)
     });
   }
 
   maybeLoad() {
-    var grid = window.localStorage.getItem('puzzle');
-    if (!grid) return;
-    grid = JSON.parse(grid);
-    return grid.map(row => row.map(cell => new Cell(cell)))
+    try {
+      var grid = window.localStorage.getItem('puzzle');
+      if (!grid) return;
+      grid = JSON.parse(grid);
+      return new Grid(grid.map(row => row.map(cell => new Cell(cell))))
+    } catch (e) {
+      console.log("Error loading puzzle");
+      console.log(e);
+    }
   }
 
-  reset(grid) {
+  reset(grid=null) {
     this.pauseAutocomplete();
     this.alert = null;
-    this.grid = grid || START_GRID.map(r => r.map(c => {
-      return c === 'X' ? {filled: true} : {}
-    }));
-    this.resetGrid();
-    this.solver = new Solver(this.dictionary, this.grid, this.clues);
+    if (grid) {
+      this.grid = grid;
+    } else {
+      var cells = cells || START_GRID.map(r => r.map(c => {
+        var cell = new Cell();
+        if (c === 'X') cell.toggleFill();
+        return cell;
+      }));
+      this.grid = new Grid(cells);
+    }
+    this.solver = new Solver(this.dictionary, this.grid);
     this.solver.fillPrompts();
   }
 
   resetText() {
-    this.pauseAutocomplete();
     this.alert = null;
-    this.grid.forEach(row => {
-      row.forEach(cell => {
-        cell.autocompleted = false;
-        cell.value = '';
-      })
-    })
-    this.clues.getClues().forEach(c => c.prompt = '');
+    this.pauseAutocomplete();
+    this.grid.resetText();
   }
 
   save() {
-    window.localStorage.setItem('puzzle', JSON.stringify(this.grid));
+    if (this.grid && this.grid.cells) {
+      window.localStorage.setItem('puzzle', JSON.stringify(this.grid.cells));
+    }
   }
 
   onKeyUp(event) {
@@ -169,24 +175,10 @@ export class AppComponent {
   puzzleSquareClick(cell: Cell) {
     if (this.editMode !== 'text') {
       cell.toggleFill();
-      this.getMirrorCell(cell).toggleFill();
-      this.resetGrid();
+      this.grid.getMirrorCell(cell).toggleFill();
+      this.grid.reset();
       return false;
     }
-  }
-
-  changeSize(newSize) {
-    while (newSize < this.grid.length) {
-      this.grid.forEach(r => r.pop());
-      this.grid.pop();
-    }
-    while (newSize > this.grid.length) {
-      var newRow = [];
-      for (var i = 0; i < this.grid.length; ++i) newRow.push(new Cell());
-      this.grid.push(newRow);
-      this.grid.forEach(r => r.push(new Cell()))
-    }
-    this.resetGrid();
   }
 
   validateCell(cell) {
@@ -196,74 +188,6 @@ export class AppComponent {
     while (c >= 0 && !cell.value.charAt(c).match(/\w/)) --c
     if (c < 0) cell.value = '';
     else cell.value = cell.value.charAt(c);
-  }
-
-  getCells(direction, start, length) {
-    if (direction === 'across') {
-      return this.grid[start[0]].filter((c, idx) => idx >= start[1] && idx < start[1] + length);
-    } else {
-      var cells = [];
-      this.grid.forEach((row, i) => {
-        if (i >= start[0] && i < start[0] + length) {
-          cells.push(row[start[1]]);
-        }
-      })
-      return cells;
-    }
-  }
-
-  getMirrorCell(cell) {
-    var mCell = null;
-    this.grid.forEach((row, rowIdx) => {
-      row.forEach((otherCell, cellIdx) => {
-        if (cell === otherCell) {
-          mCell = this.grid[this.grid.length - rowIdx - 1][this.grid.length - cellIdx - 1];
-        }
-      })
-    })
-    return mCell;
-  }
-
-  mirrorFilledCells() {
-    this.grid.forEach((row, rowIdx) => {
-      row.forEach((cell, cellIdx) => {
-        var loc = [rowIdx, cellIdx];
-        var mirrorLoc = [this.grid.length - loc[0] - 1, this.grid.length - loc[1] - 1];
-        this.grid[mirrorLoc[0]][mirrorLoc[1]].filled = cell.filled;
-      })
-    })
-  }
-
-  resetGrid() {
-    this.mirrorFilledCells();
-    var cur = 1;
-    this.clues.down = [];
-    this.clues.across = [];
-    this.grid.forEach((row, i) => {
-      row.forEach((cell, j) => {
-        if (cell.filled) return;
-        delete cell.number;
-        var above = i === 0 ? true : this.grid[i-1][j].filled;
-        var below = i === this.grid.length - 1 ? true : this.grid[i+1][j].filled;
-        var left  = j === 0 ? true : this.grid[i][j-1].filled;
-        var right = j === this.grid[0].length - 1 ? true : this.grid[i][j+1].filled;
-        if ((above && !below) || (left && !right)) {
-          if (above && !below) {
-            var length = 0;
-            while (i + length < this.grid.length && !this.grid[i + length][j].filled) ++length;
-            var clue = new Clue(cur, this.getCells('down', [i,j], length));
-            this.clues.down.push(clue);
-          }
-          if (left && !right) {
-            var length = 0;
-            while (j + length < this.grid[0].length && !this.grid[i][j+length].filled) ++length;
-            var clue = new Clue(cur, this.getCells('across', [i,j], length));
-            this.clues.across.push(clue);
-          }
-          cell.number = cur++;
-        }
-      })
-    })
   }
 
   startAutocomplete() {
