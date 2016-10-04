@@ -110,7 +110,6 @@ export class AppComponent {
     this.grid = new Grid();
     this.dictionary.getData().then(d => {
       this.reset(this.maybeLoad());
-      this.reset();
       this.solver = new Solver(this.dictionary, this.grid);
       setInterval(() => this.save(), 1000)
     });
