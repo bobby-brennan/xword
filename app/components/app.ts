@@ -151,9 +151,8 @@ export class AppComponent {
   }
 
   save() {
-    if (this.grid && this.grid.cells) {
-      window.localStorage.setItem('puzzle', JSON.stringify(this.grid.cells));
-    }
+    // TODO: save clues
+    window.localStorage.setItem('puzzle', JSON.stringify(this.grid.cells));
   }
 
   onKeyUp(event) {
