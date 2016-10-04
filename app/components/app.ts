@@ -99,7 +99,7 @@ export class AppComponent {
   grid: Cell[][];
   clues: ClueSet;
   autocompleting: boolean=false;
-  editMode: string='grid';
+  editMode: string='text';
   timeout: any;
   alert: any;
 
@@ -143,6 +143,7 @@ export class AppComponent {
         cell.value = '';
       })
     })
+    this.clues.getClues().forEach(c => c.prompt = '');
   }
 
   save() {
