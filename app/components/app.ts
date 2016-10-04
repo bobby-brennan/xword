@@ -1,5 +1,6 @@
 import {Component, ApplicationRef} from '@angular/core';
-import {Solver, Clue, Cell, ClueSet, Grid} from '../lib/solver';
+import {Solver} from '../lib/solver';
+import {Clue, Cell, ClueSet, Grid} from '../lib/grid';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
