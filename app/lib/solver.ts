@@ -47,7 +47,7 @@ export class Solver {
       return true;
     }
     if (nextClue.isAutocompleted() && nextClue.isFull()) {
-      return this.unwind() ? null : false;
+      return this.tryLastStepAgain() ? null : false;
     }
     var blanks = nextClue.cells.filter(c => !c.value);
     var completion = this.autocomplete(nextClue);
@@ -63,19 +63,15 @@ export class Solver {
       });
       return null;
     } else {
-      return this.unwind() ? null : false;
+      return this.tryLastStepAgain() ? null : false;
     }
   }
 
-  unwind(targetClues=null) {
+  tryLastStepAgain() {
     var lastStep = this.steps.pop();
     if (!lastStep) return;
     lastStep.blanks.filter(c => c.autocompleted).forEach(c => c.value = '');
-    this.updateConstraints(lastStep.clue);
     lastStep.clue.prompt = '';
-    if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
-      return this.unwind(targetClues);
-    }
     var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
     this.updateConstraints(lastStep.clue);
     if (completion) {
@@ -83,7 +79,7 @@ export class Solver {
       this.steps.push(lastStep);
       return true;
     } else {
-      return this.unwind(targetClues);
+      return this.tryLastStepAgain();
     }
   }
 
