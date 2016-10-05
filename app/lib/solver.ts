@@ -68,7 +68,7 @@ export class Solver {
   unwind(targetClues=null) {
     var lastStep = this.steps.pop();
     if (!lastStep) return;
-    lastStep.blanks.forEach(c => c.value = '');
+    lastStep.blanks.filter(c => c.autocompleted).forEach(c => c.value = '');
     lastStep.clue.prompt = '';
     if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
       return this.unwind(targetClues);
@@ -97,8 +97,7 @@ export class Solver {
         maxClue = clue;
       } else if (clue.isFull()) {
         var value = clue.cells.map(c => c.value).join('');
-        var isAutocompleted = clue.cells.filter(c => c.autocompleted).length;
-        if (isAutocompleted && !this.dictionary.contains(value)) {
+        if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
           maxClue = clue;
           minCompletions = 0;
         }
