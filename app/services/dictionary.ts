@@ -40,7 +40,8 @@ export class DictionaryService {
         this.clues = data.json();
         this.words = Object.keys(this.clues)
             .filter(s => s.length <= MAX_WORD_LENGTH)
-            .map((s, idx) => ({word: s.toLowerCase(), frequency: idx}));
+            .sort()
+            .map((s, idx) => ({word: s.toLowerCase()}));
         this.bigrams = {};
         this.words.forEach(w => {
           var arr = this.byLength[w.word.length - 1];
