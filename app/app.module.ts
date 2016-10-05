@@ -7,6 +7,7 @@ import {APP_BASE_HREF} from '@angular/common';
 
 import { appRoutes } from './app.routing';
 import { AppComponent }       from './components/app';
+import { NavbarComponent }       from './components/navbar';
 
 import {DictionaryService} from './services/dictionary';
 
@@ -23,6 +24,7 @@ import {DictionaryService} from './services/dictionary';
   ],
   declarations: [
     AppComponent,
+    NavbarComponent,
   ],
   bootstrap: [ AppComponent ]
 })
