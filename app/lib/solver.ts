@@ -96,7 +96,7 @@ export class Solver {
       if (clue.isEmpty() && !maxClue) {
         maxClue = clue;
       } else if (clue.isFull()) {
-        var value = clue.cells.map(c => c.value).join('');
+        var value = clue.getValue();
         if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
           maxClue = clue;
           minCompletions = 0;
