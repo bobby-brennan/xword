@@ -24,7 +24,8 @@ export class Solver {
     var candidates = this.getCompletionCandidates(clue).map(c => c.word);
     if (!candidates.length) return;
     var idx = startVal ? candidates.indexOf(startVal) + 1 : Math.floor(Math.random() * candidates.length);
-    return candidates[idx] === endVal ? null : candidates[idx];
+    var cand = candidates[idx % candidates.length];
+    return cand === endVal ? null : cand;
   }
 
   autocomplete(clue, startVal='', endVal='') {
