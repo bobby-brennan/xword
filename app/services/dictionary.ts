@@ -44,7 +44,7 @@ export class DictionaryService {
       .then(() => this.http.get(DICT_URL).toPromise())
       .then(data => {
         var newWords = data.json()
-              .filter(s => !this.clues[s.toUpperCase()])
+              .filter(s => !this.contains(s))
         newWords.forEach(w => this.clues[w.toUpperCase()] = '');
         this.words = this.words.concat(newWords);
       })
