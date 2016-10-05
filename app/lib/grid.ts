@@ -4,7 +4,7 @@ export class Cell {
   filled: boolean;
   number: number;
 
-  constructor(cell?: Cell) {
+  constructor(cell?: any) {
     if (cell) {
       this.value = cell.value;
       this.autocompleted = cell.autocompleted;
@@ -61,6 +61,25 @@ export class Grid {
     if (!this.clues) this.clues = new ClueSet();
     if (!this.cells) this.cells = [[]];
     this.reset();
+  }
+
+  serialize() {
+    return JSON.stringify({cells: this.cells, clues: this.clues});
+  }
+
+  static deserialize(str) {
+    var obj = JSON.parse(str);
+    var cells = obj.cells.map(r => r.map(c => new Cell(c)));
+    var grid = new Grid(cells);
+    obj.clues.across.forEach(clue => {
+      var newClue = grid.clues.across.filter(c => c.number === clue.number)[0];
+      if (newClue) newClue.prompt = clue.prompt;
+    })
+    obj.clues.down.forEach(clue => {
+      var newClue = grid.clues.down.filter(c => c.number === clue.number)[0];
+      if (newClue) newClue.prompt = clue.prompt;
+    })
+    return grid;
   }
 
   changeSize(newSize) {

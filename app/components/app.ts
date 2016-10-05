@@ -105,16 +105,26 @@ export class AppComponent {
     });
   }
 
+  save() {
+    window.localStorage.setItem('puzzle', this.grid.serialize());
+  }
+
   maybeLoad() {
+    var grid = window.localStorage.getItem('puzzle');
+    if (!grid) return;
     try {
-      var grid = window.localStorage.getItem('puzzle');
-      if (!grid) return;
-      grid = JSON.parse(grid);
-      return new Grid(grid.map(row => row.map(cell => new Cell(cell))))
+      return Grid.deserialize(grid);
     } catch (e) {
-      console.log("Error loading puzzle");
-      console.log(e);
+      console.log("Bad grid, trying old version");
+      try {
+        grid = JSON.parse(grid);
+        return new Grid(grid.map(row => row.map(cell => new Cell(cell))))
+      } catch (e) {
+        console.log("Error loading puzzle", grid);
+        console.log(e);
+      }
     }
+    return null;
   }
 
   reset(grid=null) {
@@ -138,11 +148,6 @@ export class AppComponent {
     this.alert = null;
     this.pauseAutocomplete();
     this.grid.resetText();
-  }
-
-  save() {
-    // TODO: save clues
-    window.localStorage.setItem('puzzle', JSON.stringify(this.grid.cells));
   }
 
   onKeyUp(event) {
