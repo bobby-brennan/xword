@@ -2,7 +2,7 @@ import {Clue, ClueSet, Grid, Cell} from './grid';
 
 const CHECK_BIGRAMS = false;
 const UNWIND_TO_TARGET_CLUES = true;
-const LOG = true;
+const LOG = false;
 const NUM_TRIES_BEFORE_UNWIND = 10;
 const CELL_BY_CELL = true;
 
@@ -150,7 +150,7 @@ export class Solver {
       return this.goBackOneCellStep();
     }
     this.executeStep(lastStep);
-    console.log('try ' + lastStep.numTries);
+    if (LOG) console.log('try ' + lastStep.numTries);
     return true;
   }
 
