@@ -114,12 +114,6 @@ export class Solver {
 
   getIntersectingClues(clue) {
     var dir = this.grid.clues.down.indexOf(clue) === -1 ? 'down' : 'across';
-    return clue.cells.map(cell => this.getCluesForCell(cell)[dir]).filter(clue => clue);
-  }
-
-  getCluesForCell(cell) {
-    var down = this.grid.clues.down.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
-    var across = this.grid.clues.across.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
-    return {down, across}
+    return clue.cells.map(cell => this.grid.getCluesForCell(cell)[dir]).filter(clue => clue);
   }
 }

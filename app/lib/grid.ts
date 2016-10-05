@@ -91,6 +91,12 @@ export class Grid {
     }
   }
 
+  getCluesForCell(cell) {
+    var down = this.clues.down.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
+    var across = this.clues.across.filter(clue => clue.cells.indexOf(cell) !== -1)[0];
+    return {down, across}
+  }
+
   getMirrorCell(cell) {
     var mCell = null;
     this.cells.forEach((row, rowIdx) => {
