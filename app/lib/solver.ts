@@ -1,6 +1,19 @@
 import {Clue, ClueSet, Grid, Cell} from './grid';
 
 const CHECK_BIGRAMS = false;
+const UNWIND_TO_TARGET_CLUES = true;
+const LOG = false;
+const NUM_TRIES_BEFORE_UNWIND = Infinity;
+
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
 
 export class Solver {
   steps: any[]=[];
@@ -70,16 +83,22 @@ export class Solver {
       this.fillPrompts();
       return true;
     }
-    var intersectingClues = this.grid.getIntersectingClues(nextClue);
+    if (LOG) console.log('clue', nextClue);
     if (nextClue.isAutocompleted() && nextClue.isFull()) {
-      return this.tryLastStepAgain(intersectingClues) ? null : false;
+      if (LOG) console.log('filled wrong');
+      return this.tryLastStepAgain(nextClue) ? null : false;
     }
     var blanks = nextClue.cells.filter(c => !c.value);
     var candidates = this.getCompletionCandidates(nextClue);
-    if (!candidates.length) return this.tryLastStepAgain(intersectingClues) ? null : false;
+    if (!candidates.length) {
+      if (LOG) console.log('no candidates');
+      return this.tryLastStepAgain(nextClue) ? null : false;
+    }
+    shuffleArray(candidates);
     var firstAttempt = Math.floor(Math.random() * candidates.length);
     var latestAttempt = firstAttempt;
     nextClue.autocomplete(candidates[firstAttempt]);
+    if (LOG) console.log('filled', candidates[firstAttempt].word);
     this.updateConstraints(nextClue)
     this.steps.push({
       clue: nextClue,
@@ -91,24 +110,31 @@ export class Solver {
     return null;
   }
 
-  tryLastStepAgain(targetClues=null) {
+  tryLastStepAgain(badClue: Clue) {
+    var intersectingClues = this.grid.getIntersectingClues(badClue);
     var lastStep = this.steps.pop();
     if (!lastStep) return;
+    if (LOG) console.log('undo', lastStep.clue.getValue(), lastStep);
     lastStep.blanks.filter(c => c.autocompleted).forEach(c => c.value = '');
     lastStep.clue.prompt = '';
-    if (targetClues && targetClues.indexOf(lastStep.clue) === -1 && this.steps.length) {
-      return this.tryLastStepAgain(targetClues);
+    if (UNWIND_TO_TARGET_CLUES && intersectingClues.indexOf(lastStep.clue) === -1 && this.steps.length) {
+      return this.tryLastStepAgain(badClue);
     }
     lastStep.latestAttempt = (lastStep.latestAttempt + 1) % lastStep.candidates.length;
     if (lastStep.latestAttempt === lastStep.firstAttempt) {
-      return this.tryLastStepAgain(targetClues);
+      return this.tryLastStepAgain(badClue);
     }
+    var numAttempts = lastStep.latestAttempt > lastStep.firstAttempt ?
+          lastStep.latestAttempt - lastStep.firstAttempt :
+          (lastStep.candidates.length - lastStep.firstAttempt) + lastStep.latestAttempt;
+    if (numAttempts >= NUM_TRIES_BEFORE_UNWIND) {
+      return this.tryLastStepAgain(badClue);
+    }
+    if (LOG) console.log('attempt', numAttempts);
     var completion = lastStep.candidates[lastStep.latestAttempt];
-    lastStep.clue.cells.forEach((c, idx) => {
-      if (!c.value) c.autocompleted = true;
-      c.value = completion.word.charAt(idx);
-    })
+    lastStep.clue.autocomplete(completion);
     this.updateConstraints(lastStep.clue);
+    if (LOG) console.log('filled', completion.word);
     this.steps.push(lastStep);
     return true;
   }
@@ -138,7 +164,7 @@ export class Solver {
     if (clue.isFull()) {
       var value = clue.getValue();
       if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
-        clue.constraint = -Infinity;
+        clue.constraint = 0;
       } else {
         clue.constraint = Infinity;
       }

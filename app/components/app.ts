@@ -6,7 +6,7 @@ declare let $: any;
 declare let window: any;
 declare let require: any;
 
-const START_GRID = require('json!../saves/tetris.json');
+const START_GRID = require('json!../saves/pattern.json');
 
 @Component({
     selector: 'xword',
