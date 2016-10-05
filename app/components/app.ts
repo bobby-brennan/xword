@@ -66,8 +66,8 @@ const START_GRID = require('json!../saves/tetris.json');
               <h4 class="text-uppercase">{{ clueSet }}</h4>
               <div *ngFor="let clue of grid.clues[clueSet]" class="clue">
                 <span class="clue-number">{{clue.number}}.</span>
-                <a (click)="solver.autocomplete(clue)"
-                      class="btn btn-sm {{!solver.getAutocompletion(clue) ? 'btn-danger' : 'btn-primary'}}">
+                <a (click)="clue.impossible = !solver.autocomplete(clue)"
+                      class="btn btn-sm {{clue.impossible ? 'btn-danger' : 'btn-primary'}}">
                    <span class="fa fa-magic"></span>
                 </a>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
