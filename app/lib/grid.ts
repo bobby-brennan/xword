@@ -17,6 +17,15 @@ export class Cell {
     this.filled = val === undefined ? !this.filled : val;
     if (this.filled) this.number = null;
   }
+
+  validate() {
+    if (!this.value) return;
+    this.autocompleted = false;
+    var c = this.value.length - 1;
+    while (c >= 0 && !this.value.charAt(c).match(/\w/)) --c
+    if (c < 0) this.value = '';
+    else this.value = this.value.charAt(c);
+  }
 }
 
 export class Clue {

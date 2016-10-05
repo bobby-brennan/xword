@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
-import {Grid} from '../lib/grid';
-
+import {Grid, Cell} from '../lib/grid';
+declare let $: any;
 @Component({
     selector: 'puzzle-grid',
     template: `
@@ -20,6 +20,33 @@ import {Grid} from '../lib/grid';
 })
 export class PuzzleGridComponent {
   @Input() grid: Grid;
+  @Input() editMode: string;
   constructor() {
   }
+
+  onGridKeyUp(event, cell) {
+    var isLetter = event.key.match(/[\w]/) && event.key.length === 1;
+    if (isLetter) {
+      cell.value = event.key.toLowerCase();
+      cell.validate();
+    }
+    var focused = $(':focus');
+    var cell = focused.parent();
+    var row = cell.parent();
+    var colIdx = row.children().index(cell.get(0));
+    if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
+    else if (isLetter || event.key === 'ArrowRight') cell.next().find('input').focus();
+    else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
+    else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
+  }
+
+  puzzleSquareClick(cell: Cell) {
+    if (this.editMode === 'grid') {
+      cell.toggleFill();
+      this.grid.getMirrorCell(cell).toggleFill(cell.filled);
+      this.grid.reset();
+      return false;
+    }
+  }
+
 }

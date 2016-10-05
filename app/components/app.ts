@@ -64,7 +64,7 @@ const START_GRID = [
           <div *ngIf="alert" class="alert alert-{{alert.class}}">
             {{alert.text}}
           </div>
-          <puzzle-grid [grid]="grid"></puzzle-grid>
+          <puzzle-grid [grid]="grid" [editMode]="editMode"></puzzle-grid>
           <div class="clues row">
             <div *ngFor="let clueSet of ['across', 'down']" class="col-xs-12 col-md-6">
               <h4 class="text-uppercase">{{ clueSet }}</h4>
@@ -76,7 +76,7 @@ const START_GRID = [
                 </a>
                 <input type="text" size="1" [(ngModel)]="cell.value" class="clue-letter text-uppercase"
                      *ngFor="let cell of clue.cells"
-                     (change)="clue.impossible = false; cell.autocompleted = false; validateCell(cell)"
+                     (change)="clue.impossible = false; cell.autocompleted = false; cell.validate()"
                       (keyup)="onKeyUp($event)">
                 <input type="text" class="form-control input-sm clue-prompt" [(ngModel)]="clue.prompt">
               </div>
@@ -148,40 +148,6 @@ export class AppComponent {
   onKeyUp(event) {
     if (event.key === 'Backspace') $(':focus').prev().focus();
     else if (event.key.match(/[\w]/) && event.key.length === 1) $(':focus').next().focus();
-  }
-
-  onGridKeyUp(event, cell) {
-    var isLetter = event.key.match(/[\w]/) && event.key.length === 1;
-    if (isLetter) {
-      cell.value = event.key.toLowerCase();
-      this.validateCell(cell);
-    }
-    var focused = $(':focus');
-    var cell = focused.parent();
-    var row = cell.parent();
-    var colIdx = row.children().index(cell.get(0));
-    if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
-    else if (isLetter || event.key === 'ArrowRight') cell.next().find('input').focus();
-    else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
-    else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
-  }
-
-  puzzleSquareClick(cell: Cell) {
-    if (this.editMode === 'grid') {
-      cell.toggleFill();
-      this.grid.getMirrorCell(cell).toggleFill(cell.filled);
-      this.grid.reset();
-      return false;
-    }
-  }
-
-  validateCell(cell) {
-    if (!cell.value) return;
-    cell.autocompleted = false;
-    var c = cell.value.length - 1;
-    while (c >= 0 && !cell.value.charAt(c).match(/\w/)) --c
-    if (c < 0) cell.value = '';
-    else cell.value = cell.value.charAt(c);
   }
 
   startAutocomplete() {
