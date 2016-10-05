@@ -8,6 +8,7 @@ export class Solver {
 
   getCompletionCandidates(clue) {
     var cands = this.dictionary.byLength[clue.cells.length - 1];
+    if (!cands) return [];
     cands = cands.filter(cand => {
       var match = true;
       for (var j = 0; match && j < clue.cells.length; ++j) {
