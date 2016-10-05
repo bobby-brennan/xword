@@ -9,6 +9,9 @@ declare let window: any;
     <div class="navbar-header">
       <a class="navbar-brand" href="#">XWord</a>
     </div>
+    <ul class="nav navbar-nav navbar-right">
+      <li><a href="https://github.com/bobby-brennan/xword" target="_blank">View on GitHub</a></li>
+    </ul>
   </div>
 </nav>
       `,
