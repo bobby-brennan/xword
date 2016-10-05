@@ -12,6 +12,8 @@ xword .alert {
   width: 100%;
   overflow-x: scroll;
   white-space: nowrap;
+  padding: 20px;
+  background-color: #eee;
 }
 
 .puzzle-rows {
