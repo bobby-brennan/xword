@@ -72,21 +72,24 @@ export class Solver {
       return this.tryLastStepAgain(intersectingClues) ? null : false;
     }
     var blanks = nextClue.cells.filter(c => !c.value);
-    var completion = this.autocomplete(nextClue);
-    if (completion) {
-      this.updateConstraints(nextClue);
-      var firstAttempt = nextClue.cells.map(c => c.value).join('');
-      var lastAttempt = firstAttempt;
-      this.steps.push({
-        firstAttempt,
-        lastAttempt,
-        blanks,
-        clue: nextClue,
-      });
-      return null;
-    } else {
-      return this.tryLastStepAgain(intersectingClues) ? null : false;
-    }
+    var candidates = this.getCompletionCandidates(nextClue);
+    if (!candidates.length) return this.tryLastStepAgain(intersectingClues) ? null : false;
+    var firstAttempt = Math.floor(Math.random() * candidates.length);
+    var latestAttempt = firstAttempt;
+    var completion = candidates[firstAttempt];
+    nextClue.cells.forEach((c, idx) => {
+      if (!c.value) c.autocompleted = true;
+      c.value = completion.word.charAt(idx);
+    });
+    this.updateConstraints(nextClue);
+    this.steps.push({
+      clue: nextClue,
+      candidates,
+      firstAttempt,
+      latestAttempt,
+      blanks,
+    });
+    return null;
   }
 
   tryLastStepAgain(targetClues=null) {
@@ -97,15 +100,18 @@ export class Solver {
     if (targetClues && targetClues.indexOf(lastStep.clue) === -1 && this.steps.length) {
       return this.tryLastStepAgain(targetClues);
     }
-    var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
-    this.updateConstraints(lastStep.clue);
-    if (completion) {
-      lastStep.lastAttempt = completion;
-      this.steps.push(lastStep);
-      return true;
-    } else {
+    lastStep.latestAttempt = (lastStep.latestAttempt + 1) % lastStep.candidates.length;
+    if (lastStep.latestAttempt === lastStep.firstAttempt) {
       return this.tryLastStepAgain(targetClues);
     }
+    var completion = lastStep.candidates[lastStep.latestAttempt];
+    lastStep.clue.cells.forEach((c, idx) => {
+      if (!c.value) c.autocompleted = true;
+      c.value = completion.word.charAt(idx);
+    })
+    this.updateConstraints(lastStep.clue);
+    this.steps.push(lastStep);
+    return true;
   }
 
   fillPrompts() {
