@@ -7,6 +7,7 @@ export class Solver {
   }
 
   getCompletionCandidates(clue) {
+    var intersectingClues = this.grid.getIntersectingClues(clue);
     var cands = this.dictionary.byLength[clue.cells.length - 1];
     if (!cands) return [];
     cands = cands.filter(cand => {
@@ -16,6 +17,26 @@ export class Solver {
         if (l && cand.word.charAt(j) !== l) match = false;
       }
       return match;
+    }).filter(cand => {
+      var bigramsOK = true;
+      clue.cells.forEach((cell, cellIdx) => {
+        if (!bigramsOK) return;
+        var candValueForCell = cand.word.charAt(cellIdx);
+        var iClue = intersectingClues.filter(iClue => iClue.cells.indexOf(cell) !== -1)[0];
+        if (!iClue) return;
+        var cellIdx = iClue.cells.indexOf(cell);
+        var leftCell = iClue.cells[cellIdx - 1];
+        var rightCell = iClue.cells[cellIdx + 1];
+        if (leftCell && leftCell.value) {
+          var leftBigram = leftCell.value + candValueForCell;
+          if (!this.dictionary.bigrams[leftBigram]) bigramsOK = false;
+        }
+        if (rightCell && rightCell.value) {
+          var rightBigram = candValueForCell + rightCell.value;
+          if (!this.dictionary.bigrams[rightBigram]) bigramsOK = false;
+        }
+      })
+      return bigramsOK;
     })
     return cands;
   }
@@ -118,7 +139,7 @@ export class Solver {
       }
     } else {
       var numCands = this.getCompletionCandidates(clue).length;
-      clue.constraint = Math.log(numCands) - clue.cells.length * Math.log(26);
+      clue.constraint = numCands / (clue.cells.length * 26);
     }
   }
 }
