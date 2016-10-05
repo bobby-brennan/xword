@@ -2,8 +2,9 @@ import {Clue, ClueSet, Grid, Cell} from './grid';
 
 const CHECK_BIGRAMS = false;
 const UNWIND_TO_TARGET_CLUES = true;
-const LOG = false;
-const NUM_TRIES_BEFORE_UNWIND = Infinity;
+const LOG = true;
+const NUM_TRIES_BEFORE_UNWIND = 10;
+const CELL_BY_CELL = true;
 
 function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
@@ -78,6 +79,82 @@ export class Solver {
   }
 
   step() {
+    if (CELL_BY_CELL) return this.stepOneCell();
+    else return this.stepOneWord()
+  }
+
+  stepOneCell() {
+    var nextClue = this.getMostConstrainedClue();
+    if (LOG) console.log('solving', nextClue);
+    if (!nextClue) {
+      this.fillPrompts();
+      return true;
+    }
+    if (nextClue.isAutocompleted() && nextClue.isFull()) {
+      if (LOG) console.log('filled wrong');
+      return this.goBackOneCellStep() ? null : false;
+    }
+    var candidates = this.getCompletionCandidates(nextClue);
+    var possibilitiesForCells = nextClue.cells.map(c => ({}));
+    candidates.forEach(c => {
+      possibilitiesForCells.forEach((p, idx) => {
+        p[c.word.charAt(idx)] = true;
+      })
+    })
+    var mostConstrainedIdx = -1;
+    var minPossibilities = 27;
+    possibilitiesForCells.forEach((p, idx) => {
+      if (nextClue.cells[idx].value) return;
+      var numPossibilities = Object.keys(p).length;
+      if (numPossibilities < minPossibilities) {
+        minPossibilities = numPossibilities;
+        mostConstrainedIdx = idx;
+      }
+    })
+    if (LOG) console.log('filling char ' + mostConstrainedIdx);
+    if (minPossibilities === 0) {
+      if (LOG) console.log('no possible fills');
+      return this.goBackOneCellStep() ? null : false;
+    }
+    var cellToFill = nextClue.cells[mostConstrainedIdx];
+    var possibleValues = Object.keys(possibilitiesForCells[mostConstrainedIdx]);
+    var step = {
+      cell: cellToFill,
+      possibilities: possibleValues,
+      numTries: 0,
+    };
+    this.executeStep(step);
+    return null;
+  }
+
+  executeStep(step) {
+    step.numTries++;
+    if (step.cell.value) {
+      step.cell.value = step.possibilities[(step.possibilities.indexOf(step.cell.value) + 1) % step.possibilities.length]
+    } else {
+      step.cell.value = step.possibilities[Math.floor(Math.random() * step.possibilities.length)];
+    }
+    step.cell.autocompleted = true;
+    if (LOG) console.log(step.cell.value);
+    var affectedClues = this.grid.getCluesForCell(step.cell);
+    if (affectedClues.across) this.setConstraint(affectedClues.across);
+    if (affectedClues.down) this.setConstraint(affectedClues.down);
+    this.steps.push(step);
+  }
+
+  goBackOneCellStep() {
+    var lastStep = this.steps.pop();
+    if (!lastStep) return false;
+    lastStep.cell.value = '';
+    if (lastStep.numTries >= lastStep.possibilities.length) {
+      return this.goBackOneCellStep();
+    }
+    this.executeStep(lastStep);
+    console.log('try ' + lastStep.numTries);
+    return true;
+  }
+
+  stepOneWord() {
     var nextClue = this.getMostConstrainedClue();
     if (!nextClue) {
       this.fillPrompts();
