@@ -42,7 +42,7 @@ export class Clue {
     return !this.cells.filter(c => !c.value).length;
   }
   isAutocompleted() {
-    return this.cells.filter(c => c.autocompleted).length;
+    return this.cells.filter(c => c.autocompleted).length ? true : false;
   }
   getValue() {
     return this.cells.map(c => c.value).join('');
