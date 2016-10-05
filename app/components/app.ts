@@ -148,6 +148,7 @@ export class AppComponent {
 
   startAutocomplete() {
     this.autocompleting = true;
+    var autocompleteStart = new Date();
     this.alert = {class: 'info', text: "Solving..."}
     this.solver.updateConstraints();
     var nextStep = () => {
@@ -156,7 +157,8 @@ export class AppComponent {
         this.timeout = setTimeout(() => nextStep(), 1)
       } else {
         if (completed) {
-          this.alert = {class: 'success', text: "Solved!"}
+          var autocompleteTime = ((new Date()).getTime() - autocompleteStart.getTime()) / 1000;
+          this.alert = {class: 'success', text: "Solved! " + autocompleteTime.toFixed(2) + " seconds"}
         } else {
           this.alert = {class: 'danger', text: "No solution found."}
         }
