@@ -30,6 +30,7 @@ export class Cell {
 
 export class Clue {
   prompt: string;
+  constraint: number;
 
   constructor(public number:number, public cells: Cell[]) {
   }
@@ -116,6 +117,11 @@ export class Grid {
     return {down, across}
   }
 
+  getIntersectingClues(clue) {
+    var dir = this.clues.down.indexOf(clue) === -1 ? 'down' : 'across';
+    return clue.cells.map(cell => this.getCluesForCell(cell)[dir]).filter(clue => clue);
+  }
+
   getMirrorCell(cell) {
     var mCell = null;
     this.cells.forEach((row, rowIdx) => {
@@ -179,7 +185,6 @@ export class Grid {
     })
     this.clues.getClues().forEach(c => c.prompt = '');
   }
-
 }
 
 

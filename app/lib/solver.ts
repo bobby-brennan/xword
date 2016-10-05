@@ -4,6 +4,7 @@ export class Solver {
   steps: any[]=[];
 
   constructor(private dictionary, private grid: Grid) {
+    grid.clues.getClues().forEach(c => this.setConstraint(c))
   }
 
   getCompletionCandidates(clue) {
@@ -51,6 +52,7 @@ export class Solver {
     var blanks = nextClue.cells.filter(c => !c.value);
     var completion = this.autocomplete(nextClue);
     if (completion) {
+      this.updateConstraints(nextClue);
       var firstAttempt = nextClue.cells.map(c => c.value).join('');
       var lastAttempt = firstAttempt;
       this.steps.push({
@@ -69,11 +71,13 @@ export class Solver {
     var lastStep = this.steps.pop();
     if (!lastStep) return;
     lastStep.blanks.filter(c => c.autocompleted).forEach(c => c.value = '');
+    this.updateConstraints(lastStep.clue);
     lastStep.clue.prompt = '';
     if (targetClues && targetClues.indexOf(lastStep.clue) === -1) {
       return this.unwind(targetClues);
     }
     var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
+    this.updateConstraints(lastStep.clue);
     if (completion) {
       lastStep.lastAttempt = completion;
       this.steps.push(lastStep);
@@ -90,30 +94,26 @@ export class Solver {
   }
 
   getMostConstrainedClue() {
-    var maxClue = null;
-    var minCompletions = Infinity;
-    this.grid.clues.getClues().forEach(clue => {
-      if (clue.isEmpty() && !maxClue) {
-        maxClue = clue;
-      } else if (clue.isFull()) {
-        var value = clue.getValue();
-        if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
-          maxClue = clue;
-          minCompletions = 0;
-        }
-      } else {
-        var completions = this.getCompletionCandidates(clue);
-        if (completions.length < minCompletions) {
-          maxClue = clue;
-          minCompletions = completions.length;
-        }
-      }
-    })
-    return maxClue;
+    var clue = this.grid.clues.getClues().sort((c1, c2) => c1.constraint - c2.constraint)[0];
+    if (clue.isFull() && this.dictionary.contains(clue.getValue())) return
+    return clue;
   }
 
-  getIntersectingClues(clue) {
-    var dir = this.grid.clues.down.indexOf(clue) === -1 ? 'down' : 'across';
-    return clue.cells.map(cell => this.grid.getCluesForCell(cell)[dir]).filter(clue => clue);
+  updateConstraints(clue) {
+    this.setConstraint(clue);
+    this.grid.getIntersectingClues(clue).forEach(c => this.setConstraint(c));
+  }
+
+  setConstraint(clue) {
+    if (clue.isFull()) {
+      var value = clue.getValue();
+      if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
+        clue.constraint = 0;
+      } else {
+        clue.constraint = Infinity;
+      }
+    } else {
+      clue.constraint = this.getCompletionCandidates(clue).length;
+    }
   }
 }
