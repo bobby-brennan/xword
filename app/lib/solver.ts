@@ -46,8 +46,9 @@ export class Solver {
       this.fillPrompts();
       return true;
     }
+    var intersectingClues = this.grid.getIntersectingClues(nextClue);
     if (nextClue.isAutocompleted() && nextClue.isFull()) {
-      return this.tryLastStepAgain() ? null : false;
+      return this.tryLastStepAgain(intersectingClues) ? null : false;
     }
     var blanks = nextClue.cells.filter(c => !c.value);
     var completion = this.autocomplete(nextClue);
@@ -63,15 +64,18 @@ export class Solver {
       });
       return null;
     } else {
-      return this.tryLastStepAgain() ? null : false;
+      return this.tryLastStepAgain(intersectingClues) ? null : false;
     }
   }
 
-  tryLastStepAgain() {
+  tryLastStepAgain(targetClues=null) {
     var lastStep = this.steps.pop();
     if (!lastStep) return;
     lastStep.blanks.filter(c => c.autocompleted).forEach(c => c.value = '');
     lastStep.clue.prompt = '';
+    if (targetClues && targetClues.indexOf(lastStep.clue) === -1 && this.steps.length) {
+      return this.tryLastStepAgain(targetClues);
+    }
     var completion = this.autocomplete(lastStep.clue, lastStep.lastAttempt, lastStep.firstAttempt);
     this.updateConstraints(lastStep.clue);
     if (completion) {
@@ -79,7 +83,7 @@ export class Solver {
       this.steps.push(lastStep);
       return true;
     } else {
-      return this.tryLastStepAgain();
+      return this.tryLastStepAgain(targetClues);
     }
   }
 
