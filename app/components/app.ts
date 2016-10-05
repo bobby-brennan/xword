@@ -148,6 +148,7 @@ export class AppComponent {
   startAutocomplete() {
     this.autocompleting = true;
     this.alert = {class: 'info', text: "Solving..."}
+    this.solver.updateConstraints();
     var nextStep = () => {
       var completed = this.solver.step();
       if (completed === null) {

@@ -43,7 +43,9 @@ export class PuzzleGridComponent {
     var isLetter = event.key.match(/[\w]/) && event.key.length === 1;
     if (isLetter) {
       cell.value = event.key.toLowerCase();
-      cell.validate();
+      cell.autocompleted = false;
+    } else if (event.key === 'Backspace') {
+      cell.value = '';
     }
     var focused = $(':focus');
     var cell = focused.parent();

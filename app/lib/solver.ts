@@ -4,7 +4,6 @@ export class Solver {
   steps: any[]=[];
 
   constructor(private dictionary, private grid: Grid) {
-    grid.clues.getClues().forEach(c => this.setConstraint(c))
   }
 
   getCompletionCandidates(clue) {
@@ -99,9 +98,13 @@ export class Solver {
     return clue;
   }
 
-  updateConstraints(clue) {
-    this.setConstraint(clue);
-    this.grid.getIntersectingClues(clue).forEach(c => this.setConstraint(c));
+  updateConstraints(clue?) {
+    if (!clue) {
+      this.grid.clues.getClues().forEach(c => this.setConstraint(c))
+    } else {
+      this.setConstraint(clue);
+      this.grid.getIntersectingClues(clue).forEach(c => this.setConstraint(c));
+    }
   }
 
   setConstraint(clue) {
