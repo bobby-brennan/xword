@@ -67,8 +67,8 @@ export class Grid {
     return JSON.stringify({cells: this.cells, clues: this.clues});
   }
 
-  static deserialize(str) {
-    var obj = JSON.parse(str);
+  static deserialize(obj) {
+    if (typeof obj === 'string') obj = JSON.parse(obj);
     var cells = obj.cells.map(r => r.map(c => new Cell(c)));
     var grid = new Grid(cells);
     obj.clues.across.forEach(clue => {

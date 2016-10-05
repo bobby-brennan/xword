@@ -4,16 +4,9 @@ import {Clue, Cell, ClueSet, Grid} from '../lib/grid';
 import {DictionaryService} from '../services/dictionary';
 declare let $: any;
 declare let window: any;
+declare let require: any;
 
-const START_GRID = [
-  [' ',' ',' ',' ',' ',' ',' '],
-  [' ','X',' ','X',' ',' ',' '],
-  [' ','X',' ',' ',' ',' ',' '],
-  [' ',' ',' ',' ',' ',' ',' '],
-  [' ',' ',' ',' ',' ','X',' '],
-  [' ',' ',' ','X',' ','X',' '],
-  [' ',' ',' ',' ',' ',' ',' '],
-]
+const START_GRID = require('json!../saves/tetris.json');
 
 @Component({
     selector: 'xword',
@@ -135,12 +128,7 @@ export class AppComponent {
     if (grid) {
       this.grid = grid;
     } else {
-      var cells = cells || START_GRID.map(r => r.map(c => {
-        var cell = new Cell();
-        if (c === 'X') cell.toggleFill();
-        return cell;
-      }));
-      this.grid = new Grid(cells);
+      this.grid = Grid.deserialize(START_GRID);
     }
     this.solver = new Solver(this.dictionary, this.grid);
     this.solver.fillPrompts();
