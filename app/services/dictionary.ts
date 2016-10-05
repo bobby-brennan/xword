@@ -7,7 +7,8 @@ import 'rxjs/add/operator/toPromise';
 
 declare let window: any;
 
-const DICT_URL = 'clues_filtered.json';
+const CLUES_URL = 'clues_filtered.json';
+const DICT_URL = 'dictionary.json';
 const MAX_WORD_LENGTH = 20
 const MIN_BIGRAM_COUNT = 50;
 
@@ -26,7 +27,7 @@ export class DictionaryService {
   }
 
   contains(s: string) {
-    return this.getPrompt(s) ? true : false;
+    return this.getPrompt(s) !== undefined ? true : false;
   }
 
   getPrompt(s: string) {
@@ -34,14 +35,22 @@ export class DictionaryService {
   }
 
   getData() {
-    return this.http.get(DICT_URL)
+    return this.http.get(CLUES_URL)
       .toPromise()
       .then(data => {
         this.clues = data.json();
-        this.words = Object.keys(this.clues)
-            .filter(s => s.length <= MAX_WORD_LENGTH)
-            .sort()
-            .map((s, idx) => ({word: s.toLowerCase()}));
+        this.words = Object.keys(this.clues).map(w => w.toLowerCase());
+      })
+      .then(() => this.http.get(DICT_URL).toPromise())
+      .then(data => {
+        var newWords = data.json()
+              .filter(s => !this.clues[s.toUpperCase()])
+        this.words = this.words.concat(newWords);
+      })
+      .then(() => {
+        this.words = this.words.filter(w => w.length <= MAX_WORD_LENGTH);
+        this.words.sort();
+        this.words = this.words.map(w => ({word: w}));
         this.bigrams = {};
         this.words.forEach(w => {
           var arr = this.byLength[w.word.length - 1];
@@ -55,7 +64,6 @@ export class DictionaryService {
         for (var bigram in this.bigrams) {
           if (this.bigrams[bigram] < MIN_BIGRAM_COUNT) delete this.bigrams[bigram];
         }
-        return this.byLength;
       })
       .catch(this.handleError);
   }
