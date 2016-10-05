@@ -19,10 +19,14 @@ declare let $: any;
             </div>
           </div>
           <div class="active-clues" *ngIf="activeClues">
-            <h4>{{activeClues.across.number}}. Across</h4>
-            <p>{{activeClues.across.prompt || '(No clue set)' }}</p>
-            <h4>{{activeClues.down.number}}. Down</h4>
-            <p>{{activeClues.down.prompt || '(No clue set)' }}</p>
+            <div *ngIf="activeClues.across">
+              <h4>{{activeClues.across.number}}. Across</h4>
+              <p>{{activeClues.across.prompt || '(No clue set)' }}</p>
+            </div>
+            <div *ngIf="activeClues.down">
+              <h4>{{activeClues.down.number}}. Down</h4>
+              <p>{{activeClues.down.prompt || '(No clue set)' }}</p>
+            </div>
           </div>
         </div>
       `,
