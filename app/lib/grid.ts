@@ -47,6 +47,13 @@ export class Clue {
   getValue() {
     return this.cells.map(c => c.value).join('');
   }
+
+  autocomplete(completion) {
+    this.cells.forEach((c, idx) => {
+      if (!c.value) c.autocompleted = true;
+      c.value = completion.word.charAt(idx);
+    });
+  }
 }
 
 export class ClueSet {

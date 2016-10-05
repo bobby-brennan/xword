@@ -1,5 +1,7 @@
 import {Clue, ClueSet, Grid, Cell} from './grid';
 
+const CHECK_BIGRAMS = false;
+
 export class Solver {
   steps: any[]=[];
 
@@ -18,6 +20,7 @@ export class Solver {
       }
       return match;
     }).filter(cand => {
+      if (!CHECK_BIGRAMS) return true;
       var bigramsOK = true;
       clue.cells.forEach((cell, cellIdx) => {
         if (!bigramsOK) return;
@@ -76,12 +79,8 @@ export class Solver {
     if (!candidates.length) return this.tryLastStepAgain(intersectingClues) ? null : false;
     var firstAttempt = Math.floor(Math.random() * candidates.length);
     var latestAttempt = firstAttempt;
-    var completion = candidates[firstAttempt];
-    nextClue.cells.forEach((c, idx) => {
-      if (!c.value) c.autocompleted = true;
-      c.value = completion.word.charAt(idx);
-    });
-    this.updateConstraints(nextClue);
+    nextClue.autocomplete(candidates[firstAttempt]);
+    this.updateConstraints(nextClue)
     this.steps.push({
       clue: nextClue,
       candidates,
@@ -145,7 +144,7 @@ export class Solver {
       }
     } else {
       var numCands = this.getCompletionCandidates(clue).length;
-      clue.constraint = numCands / (clue.cells.length * 26);
+      clue.constraint = numCands;
     }
   }
 }
