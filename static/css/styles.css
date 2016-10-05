@@ -26,6 +26,9 @@ xword .alert {
   overflow: hidden;
   position: relative;
 }
+.puzzle-square.highlight {
+  border: 1px solid blue;
+}
 
 .puzzle-square.filled {
   background-color: #333;

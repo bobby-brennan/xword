@@ -8,6 +8,7 @@ declare let $: any;
           <div class="puzzle-rows pull-left">
             <div class="puzzle-row" *ngFor="let row of grid.cells">
               <div class="puzzle-square" *ngFor="let cell of row"
+                    [class.highlight]="activeClues && activeClues[activeDirection] && activeClues[activeDirection].cells.indexOf(cell) !== -1"
                     (click)="puzzleSquareClick(cell)" [class.filled]="cell.filled">
                 <span class="puzzle-number">{{cell.number}}&nbsp;</span>
                 <input *ngIf="!cell.filled"
@@ -34,6 +35,7 @@ declare let $: any;
 export class PuzzleGridComponent {
   @Input() grid: Grid;
   @Input() editMode: string;
+  activeDirection: string='across';
   constructor() {
   }
 
@@ -47,10 +49,29 @@ export class PuzzleGridComponent {
     var cell = focused.parent();
     var row = cell.parent();
     var colIdx = row.children().index(cell.get(0));
-    if (event.key === 'Backspace' || event.key === 'ArrowLeft') cell.prev().find('input').focus();
-    else if (isLetter || event.key === 'ArrowRight') cell.next().find('input').focus();
-    else if (event.key === 'ArrowUp') row.prev().children().eq(colIdx).find('input').focus();
-    else if (event.key === 'ArrowDown') row.next().children().eq(colIdx).find('input').focus();
+    if (isLetter) this.move('next')
+    else if (event.key === 'Backspace') this.move('previous');
+    else if (event.key === 'ArrowLeft') this.move('left')
+    else if (event.key === 'ArrowRight') this.move('right');
+    else if (event.key === 'ArrowUp') this.move('up');
+    else if (event.key === 'ArrowDown') this.move('down');
+  }
+
+  move (dir) {
+    var focused = $(':focus');
+    var cell = focused.parent();
+    var row = cell.parent();
+    var colIdx = row.children().index(cell.get(0));
+
+    if (dir === 'left' || dir === 'right') this.activeDirection = 'across';
+    else if (dir === 'down' || dir === 'up') this.activeDirection = 'down';
+    else if (dir === 'next') dir = this.activeDirection === 'down' ? 'down' : 'right';
+    else if (dir === 'previous') dir = this.activeDirection === 'down' ? 'up' : 'left';
+
+    if (dir === 'left') cell.prev().find('input').focus();
+    else if (dir ==='right') cell.next().find('input').focus();
+    else if (dir === 'up') row.prev().children().eq(colIdx).find('input').focus();
+    else if (dir === 'down') row.next().children().eq(colIdx).find('input').focus();
   }
 
   puzzleSquareClick(cell: Cell) {
