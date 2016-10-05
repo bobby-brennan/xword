@@ -54,10 +54,13 @@ const START_GRID = [
               </div>
             </div>
             <div class="col-xs-6 col-md-3">
-              <label>Reset</label><br>
-              <div class="btn-group">
-                <a class="btn btn-danger fa fa-trash" (click)="reset()"></a>
-                <a class="btn btn-danger fa fa-font" (click)="resetText()"></a>
+              <label>Puzzle</label><br>
+              <div class="btn-toolbar">
+                <a class="btn btn-success fa fa-save" (click)="save()"></a>
+                <div class="btn-group">
+                  <a class="btn btn-danger fa fa-trash" (click)="reset()"></a>
+                  <a class="btn btn-danger fa fa-font" (click)="resetText()"></a>
+                </div>
               </div>
             </div>
           </div>
@@ -101,7 +104,6 @@ export class AppComponent {
     this.dictionary.getData().then(d => {
       this.reset(this.maybeLoad());
       this.solver = new Solver(this.dictionary, this.grid);
-      setInterval(() => this.save(), 1000)
     });
   }
 
