@@ -23,7 +23,7 @@ const START_GRID = require('json!../saves/tetris.json');
                 <button class="btn btn-primary" (click)="pauseAutocomplete()" [disabled]="!autocompleting">
                   <span class="fa fa-pause"></span>
                 </button>
-                <button class="btn btn-primary" (click)="solver.step()" [disabled]="autocompleting">
+                <button class="btn btn-primary" (click)="solver.updateConstraints(); solver.step()" [disabled]="autocompleting">
                   <span class="fa fa-step-forward"></span>
                 </button>
               </div>
@@ -137,6 +137,7 @@ export class AppComponent {
   resetText() {
     this.alert = null;
     this.pauseAutocomplete();
+    this.solver.steps = [];
     this.grid.resetText();
   }
 
