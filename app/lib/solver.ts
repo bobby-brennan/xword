@@ -108,12 +108,13 @@ export class Solver {
     if (clue.isFull()) {
       var value = clue.getValue();
       if (clue.isAutocompleted() && !this.dictionary.contains(value)) {
-        clue.constraint = 0;
+        clue.constraint = -Infinity;
       } else {
         clue.constraint = Infinity;
       }
     } else {
-      clue.constraint = this.getCompletionCandidates(clue).length;
+      var numCands = this.getCompletionCandidates(clue).length;
+      clue.constraint = Math.log(numCands) - clue.cells.length * Math.log(26);
     }
   }
 }
